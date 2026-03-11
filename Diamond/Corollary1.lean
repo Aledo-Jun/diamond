@@ -1,5 +1,7 @@
 import Diamond.Setups
-import Diamond.Theorem1
+import Diamond.Lemma1
+import Diamond.Lemma4
+import Diamond.Lemma6
 
 open scoped BigOperators
 open scoped ComplexOrder
@@ -19,10 +21,15 @@ theorem corollary1
     (T : Channel d) (hT : IsQuantumChannel T)
     (ρ : Matrix (d × d) (d × d) ℂ) :
     partialTraceLeft d d (tensorWithIdentity d d (idMinus T) ρ) = 0 := by
-  have htrace : IsTraceAnnihilating (idMinus T) :=
-    idMinus_isTraceAnnihilating T hT
-  exact partialTraceLeft_tensor_zero (d := d) (k := d)
-    (Ψ := idMinus T) htrace ρ
+  ext i j
+  calc
+    partialTraceLeft d d (tensorWithIdentity d d (idMinus T) ρ) i j
+      = partialTraceLeft d d ρ i j -
+          partialTraceLeft d d (tensorWithIdentity d d T ρ) i j := by
+            simp [partialTraceLeft, tensorWithIdentity, idMinus, Finset.sum_sub_distrib]
+    _ = 0 := by
+          rw [lemma4 T hT ρ]
+          ring
 
 /-- The maximally entangled vector used in the lower bound for Eq. (7). -/
 def omegaVec (d : ℕ) : Fin d × Fin d → ℂ :=
@@ -31,60 +38,6 @@ def omegaVec (d : ℕ) : Fin d × Fin d → ℂ :=
 /-- The corresponding rank-one density operator `|Ω_d⟩⟨Ω_d|`. -/
 def phiState (d : ℕ) : Matrix (Fin d × Fin d) (Fin d × Fin d) ℂ :=
   Matrix.vecMulVec (omegaVec d) (star (omegaVec d))
-
-/-- The swap operator `F`. -/
-def swapMatrix (d : ℕ) : Matrix (Fin d × Fin d) (Fin d × Fin d) ℂ :=
-  fun i j => if i.1 = j.2 ∧ i.2 = j.1 then 1 else 0
-
-theorem swapMatrix_mul_self (d : ℕ) :
-    swapMatrix d * swapMatrix d = 1 := by
-  ext i j
-  rw [Matrix.mul_apply]
-  rw [Finset.sum_eq_single (i.2, i.1)]
-  · by_cases hij : i = j
-    · subst hij
-      simp [swapMatrix]
-    · have hneq : ¬ (i.2 = j.2 ∧ i.1 = j.1) := by
-        intro h
-        apply hij
-        cases i with
-        | mk a b =>
-          cases j with
-          | mk c e =>
-            simp only [Prod.mk.injEq] at h ⊢
-            exact ⟨h.2, h.1⟩
-      simp [swapMatrix, hneq, hij]
-  · intro x _ hx
-    have hzero : ¬ (i.1 = x.2 ∧ i.2 = x.1) := by
-      intro h
-      apply hx
-      ext <;> simp [h.1, h.2]
-    simp [swapMatrix, hzero]
-  · intro hi
-    simp at hi
-
-theorem swapMatrix_conjTranspose (d : ℕ) :
-    (swapMatrix d)ᴴ = swapMatrix d := by
-  ext i j
-  by_cases h : i.1 = j.2 ∧ i.2 = j.1
-  · rcases h with ⟨h1, h2⟩
-    have h' : j.1 = i.2 ∧ j.2 = i.1 := ⟨h2.symm, h1.symm⟩
-    change
-      star (if j.1 = i.2 ∧ j.2 = i.1 then (1 : ℂ) else 0) =
-        if i.1 = j.2 ∧ i.2 = j.1 then (1 : ℂ) else 0
-    simp only [if_pos h', if_pos (And.intro h1 h2), star_one]
-  · have h' : ¬ (j.1 = i.2 ∧ j.2 = i.1) := by
-      intro hji
-      apply h
-      exact ⟨hji.2.symm, hji.1.symm⟩
-    change
-      star (if j.1 = i.2 ∧ j.2 = i.1 then (1 : ℂ) else 0) =
-        if i.1 = j.2 ∧ i.2 = j.1 then (1 : ℂ) else 0
-    simp only [if_neg h', if_neg h, star_zero]
-
-theorem swapMatrix_conjTranspose_mul_self (d : ℕ) :
-    (swapMatrix d)ᴴ * swapMatrix d = 1 := by
-  rw [swapMatrix_conjTranspose, swapMatrix_mul_self]
 
 theorem inv_sqrt_mul_inv_sqrt (d : ℕ) [Fact (1 < d)] :
     ((Real.sqrt d : ℂ)⁻¹) * ((Real.sqrt d : ℂ)⁻¹) = (d : ℂ)⁻¹ := by
@@ -245,8 +198,8 @@ theorem theorem_eq7_witness_bound (d : ℕ) [Fact (1 < d)] :
         ((tensorWithIdentity (Fin d) (Fin d) (Lambda d)) (phiState d)) ≤
       diamondOp (Lambda d) := by
   simpa [diamondOp] using
-    traceNorm_apply_le_diamond (d := Fin d × Fin d)
-      (Φ := tensorWithIdentity (Fin d) (Fin d) (Lambda d))
+    traceNorm_apply_le_diamond (d := Fin d) (k := Fin d)
+      (Φ := Lambda d)
       (ρ := phiState d) (phiState_isDensityState d)
 
 theorem theorem_eq7_witness_bound_explicit (d : ℕ) [Fact (1 < d)] :
@@ -657,11 +610,9 @@ theorem theorem_eq7 (d : ℕ) [Fact (1 < d)] :
 /-- Pointwise upper bound for the unitary-channel gap in Eq. (8). -/
 theorem theorem_eq8_upper_bound (d : ℕ) [Fact (1 < d)] :
     diamondOp (idMinus (adMap (Fin d) (Ud d))) ≤ 2 := by
-  change
-    diamondNorm
-      (tensorWithIdentity (Fin d) (Fin d) (idMinus (adMap (Fin d) (Ud d)))) ≤ 2
+  change diamondNormAt (d := Fin d) (k := Fin d) (idMinus (adMap (Fin d) (Ud d))) ≤ 2
   refine diamond_le_of_pointwise
-    (tensorWithIdentity (Fin d) (Fin d) (idMinus (adMap (Fin d) (Ud d)))) 2 ?_
+    (d := Fin d) (k := Fin d) (idMinus (adMap (Fin d) (Ud d))) 2 ?_
   intro ρ hρ
   have hσ :
       IsDensityState
@@ -870,14 +821,17 @@ theorem theorem_eq8_witness_bound (d : ℕ) [Fact (1 < d)] :
     _ ≤ diamondOp (idMinus (adMap (Fin d) (Ud d))) := by
           simpa [diamondOp] using
             traceNorm_apply_le_diamond
-              (d := Fin d × Fin d)
-              (Φ := tensorWithIdentity (Fin d) (Fin d) (idMinus (adMap (Fin d) (Ud d))))
+              (d := Fin d) (k := Fin d)
+              (Φ := idMinus (adMap (Fin d) (Ud d)))
               (ρ := phiState d) (phiState_isDensityState d)
 
 /-- Paper Eq. (8): the unitary-channel gap. -/
 theorem theorem_eq8 (d : ℕ) [Fact (1 < d)] :
     diamondOp (idMinus (adMap (Fin d) (Ud d))) = 2 := by
-  exact le_antisymm (theorem_eq8_upper_bound d) (theorem_eq8_witness_bound d)
+  have htrace : Matrix.trace (Ud d) = 0 := by
+    simp [Matrix.trace, sum_ud_eq_zero]
+  exact diamond_idMinus_adMap_eq_two_of_trace_zero
+    (U := Ud d) (hU := ud_conjTranspose_mul_self d) htrace
 
 
 end

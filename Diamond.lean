@@ -1,4 +1,12 @@
 import Diamond.Setups
+import Diamond.Lemma1
+import Diamond.Lemma2
+import Diamond.Lemma3
+import Diamond.Lemma4
+import Diamond.Lemma5
+import Diamond.Lemma6
+import Diamond.Lemma7
+import Diamond.Remark1
 import Diamond.Theorem1
 import Diamond.Corollary1
 import Diamond.Corollary2

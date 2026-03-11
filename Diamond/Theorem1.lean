@@ -1,4 +1,8 @@
 import Diamond.Setups
+import Diamond.Lemma1
+import Diamond.Lemma2
+import Diamond.Lemma3
+import Diamond.Lemma4
 
 open scoped BigOperators
 open scoped ComplexOrder
@@ -17,15 +21,18 @@ theorem theorem1
     (T : Channel d) (hT : IsQuantumChannel T) :
     diamondOp ((transposeMap d).comp (idMinus T)) ≤
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T) := by
-  change diamondNorm (tensorWithIdentity d d ((transposeMap d).comp (idMinus T))) ≤
+  change diamondNormAt (d := d) (k := d) ((transposeMap d).comp (idMinus T)) ≤
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)
-  rw [tensorWithIdentity_comp_transpose (d := d) (k := d) (Φ := idMinus T)]
-  let Ψ' : Channel (d × d) :=
-    (partialTransposeMap d d).comp (tensorWithIdentity d d (idMinus T))
-  refine diamond_le_of_pointwise Ψ'
+  refine diamond_le_of_pointwise (d := d) (k := d) ((transposeMap d).comp (idMinus T))
     ((1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)) ?_
   intro ρ hρ
   let Mρ : Matrix (d × d) (d × d) ℂ := tensorWithIdentity d d (idMinus T) ρ
+  have hrewrite :
+      tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ =
+        partialTransposeMap d d Mρ := by
+    simpa [Mρ, LinearMap.comp_apply] using
+      congrArg (fun Ψ : Channel (d × d) => Ψ ρ)
+        (tensorWithIdentity_comp_transpose (d := d) (k := d) (Φ := idMinus T))
   have hTrace : Matrix.trace Mρ = 0 := by
     simpa [Mρ] using
       tensorWithIdentity_trace_zero (d := d) (k := d)
@@ -37,25 +44,27 @@ theorem theorem1
   have hlemma3 : hsNormOp (partialTransposeMap d d Mρ) = hsNormOp Mρ := by
     simpa [Mρ] using lemma3 (d := d) (k := d) Mρ
   have hlemma2 :
-      traceNormOp (Ψ' ρ) ≤ Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Mρ := by
+      traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ) ≤
+        Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Mρ := by
     have htmp :
         traceNormOp (partialTransposeMap d d Mρ) ≤
           Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp (partialTransposeMap d d Mρ) := by
       simpa using lemma2 (Y := partialTransposeMap d d Mρ)
-    simpa [Ψ', LinearMap.comp_apply, Mρ, hlemma3] using htmp
+    rw [hrewrite]
+    simpa [hlemma3] using htmp
   have hlemma1 : hsNormOp Mρ ≤ (1 / Real.sqrt 2) * traceNormOp Mρ := by
     simpa [Mρ] using lemma1 (X := Mρ) hHerm hTrace
   have htraceBound : traceNormOp Mρ ≤ diamondOp (idMinus T) := by
     simpa [Mρ, diamondOp] using
       traceNorm_apply_le_diamond
-        (d := d × d) (Φ := tensorWithIdentity d d (idMinus T)) (ρ := ρ) hρ
+        (d := d) (k := d) (Φ := idMinus T) (ρ := ρ) hρ
   have hhs : hsNormOp Mρ ≤ (1 / Real.sqrt 2) * diamondOp (idMinus T) := by
     calc
       hsNormOp Mρ ≤ (1 / Real.sqrt 2) * traceNormOp Mρ := hlemma1
       _ ≤ (1 / Real.sqrt 2) * diamondOp (idMinus T) := by
         exact mul_le_mul_of_nonneg_left htraceBound (by positivity)
   have hfinal1 :
-      traceNormOp (Ψ' ρ) ≤
+      traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ) ≤
         Real.sqrt (Fintype.card (d × d) : ℝ) * ((1 / Real.sqrt 2) * diamondOp (idMinus T)) := by
     exact le_trans hlemma2 (mul_le_mul_of_nonneg_left hhs (Real.sqrt_nonneg _))
   have hsqrt : Real.sqrt (Fintype.card (d × d) : ℝ) = diamondOp (transposeMap d) := by
@@ -67,7 +76,7 @@ theorem theorem1
       positivity
     simp [abs_of_nonneg hnn]
   calc
-    traceNormOp (Ψ' ρ) ≤
+    traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ) ≤
         Real.sqrt (Fintype.card (d × d) : ℝ) *
           ((1 / Real.sqrt 2) * diamondOp (idMinus T)) := hfinal1
     _ = (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T) := by
