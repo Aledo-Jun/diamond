@@ -45,6 +45,10 @@ theorem hsNorm_sq_eq_re_trace_conjTranspose_mul_self
     _ = Complex.re (Matrix.trace (Xᴴ * X)) := by
           exact htrace.symm
 
+section
+
+set_option linter.unnecessarySimpa false
+
 theorem hermitian_re_trace_conjTranspose_mul_self_eq_sum_sq_eigenvalues
     {d : Type u} [Fintype d] [DecidableEq d]
     {A : Matrix d d ℂ} (hA : Matrix.IsHermitian A) :
@@ -77,6 +81,8 @@ theorem hermitian_re_trace_conjTranspose_mul_self_eq_sum_sq_eigenvalues
           rw [hDsq]
     _ = ∑ i, (hA.eigenvalues i) ^ 2 := by
           simp [D, Matrix.trace, pow_two]
+
+end
 
 /-- Left multiplication by an isometry preserves the concrete trace norm. -/
 theorem traceNormOp_mul_left_isometry

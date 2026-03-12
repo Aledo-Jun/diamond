@@ -14,6 +14,10 @@ universe u
 
 noncomputable section
 
+section
+
+set_option linter.unnecessarySimpa false
+
 /-- Paper Lemma 4: partial trace on the left is unchanged by tensoring with a quantum channel. -/
 theorem lemma4
     {d : Type u} [Fintype d] [DecidableEq d]
@@ -52,6 +56,8 @@ theorem lemma4
       rw [hcomplete]
     _ = partialTraceLeft d k Z i j := by
       simp [A, partialTraceLeft, Matrix.trace]
+
+end
 
 end
 end Diamond
