@@ -441,6 +441,388 @@ private lemma partialTranspose_ne_zero_of_ne_zero
     exact hnormY
   exact hX ((hsNormOp_eq_zero_iff).1 hnormX)
 
+/-- Generic vectorization used for the local positive-gap rank argument. -/
+private def vecKetGen
+    {d : Type u} [Fintype d] [DecidableEq d] (A : Matrix d d ℂ) : d × d → ℂ :=
+  fun ij => A ij.1 ij.2
+
+/-- Generic swap operator on `d × d`. -/
+private def swapMatrixGen
+    (d : Type u) [Fintype d] [DecidableEq d] : Matrix (d × d) (d × d) ℂ :=
+  fun i j => if i.1 = j.2 ∧ i.2 = j.1 then 1 else 0
+
+/-- Generic form of Lemma 6. -/
+private theorem lemma6_gen
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (X Y : Matrix d d ℂ) :
+    swapMatrixGen d * (X ⊗ₖ Y) = (Y ⊗ₖ X) * swapMatrixGen d := by
+  ext i j
+  rcases i with ⟨a, b⟩
+  rcases j with ⟨c, e⟩
+  have hleft :
+      (swapMatrixGen d * (X ⊗ₖ Y)) (a, b) (c, e) = X b c * Y a e := by
+    rw [Matrix.mul_apply]
+    rw [Finset.sum_eq_single (b, a)]
+    · simp [swapMatrixGen, Matrix.kroneckerMap_apply]
+    · intro x _ hx
+      have hzero : ¬ (a = x.2 ∧ b = x.1) := by
+        intro h
+        apply hx
+        ext <;> simp [h.1, h.2]
+      simp [swapMatrixGen, Matrix.kroneckerMap_apply, hzero]
+    · intro hba
+      simp at hba
+  have hright :
+      ((Y ⊗ₖ X) * swapMatrixGen d) (a, b) (c, e) = Y a e * X b c := by
+    rw [Matrix.mul_apply]
+    rw [Finset.sum_eq_single (e, c)]
+    · simp [swapMatrixGen, Matrix.kroneckerMap_apply]
+    · intro x _ hx
+      have hzero : ¬ (x.1 = e ∧ x.2 = c) := by
+        intro h
+        apply hx
+        ext <;> simp [h.1, h.2]
+      simp [swapMatrixGen, Matrix.kroneckerMap_apply, hzero]
+    · intro hec
+      simp at hec
+  rw [hleft, hright, mul_comm]
+
+/-- Entrywise helper for the generic form of Lemma 7. -/
+private theorem oneKronecker_mul_swap_apply_gen
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (A : Matrix d d ℂ) (a b c e : d) :
+    (((1 : Matrix d d ℂ) ⊗ₖ A) * swapMatrixGen d) (a, b) (c, e) =
+      if a = e then A b c else 0 := by
+  rw [Matrix.mul_apply]
+  rw [Finset.sum_eq_single (e, c)]
+  · simp [swapMatrixGen, Matrix.kroneckerMap_apply, Matrix.one_apply]
+  · intro x _ hx
+    have hzero : ¬ (x.1 = e ∧ x.2 = c) := by
+      intro h
+      apply hx
+      ext <;> simp [h.1, h.2]
+    simp [swapMatrixGen, Matrix.kroneckerMap_apply, Matrix.one_apply, hzero]
+  · intro hec
+    simp at hec
+
+/-- Generic form of Lemma 7. -/
+private theorem lemma7_gen
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (A B : Matrix d d ℂ) :
+    partialTransposeMap d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen B))) =
+      (((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) *
+        ((1 : Matrix d d ℂ) ⊗ₖ B.map star) := by
+  ext i j
+  rcases i with ⟨p, i⟩
+  rcases j with ⟨q, j⟩
+  have hleft :
+      partialTransposeMap d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen B))) (p, i) (q, j) =
+        A q i * star (B p j) := by
+    simp [partialTransposeMap, Matrix.vecMulVec_apply, vecKetGen]
+  have hright :
+      ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) *
+          ((1 : Matrix d d ℂ) ⊗ₖ B.map star))
+          (p, i) (q, j) =
+        A q i * star (B p j) := by
+    rw [Matrix.mul_apply]
+    rw [Finset.sum_eq_single (q, p)]
+    · simp [oneKronecker_mul_swap_apply_gen, Matrix.kroneckerMap_apply]
+    · intro x _ hx
+      by_cases hx1 : x.1 = q
+      · by_cases hx2 : x.2 = p
+        · apply (hx <| by ext <;> simp [hx1, hx2]).elim
+        · have hleftzero :
+              (((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) (p, i) x = 0 := by
+            rw [oneKronecker_mul_swap_apply_gen]
+            simp [show ¬ p = x.2 by simpa [eq_comm] using hx2]
+          simp [hleftzero, Matrix.kroneckerMap_apply, Matrix.one_apply, hx1]
+      · have hrightzero :
+            (((1 : Matrix d d ℂ) ⊗ₖ B.map star) x (q, j)) = 0 := by
+          simp [Matrix.kroneckerMap_apply, hx1]
+        rw [hrightzero]
+        simp
+    · intro hqp
+      simp at hqp
+  rw [hleft, hright]
+
+/-- Rank bound for the diagonal tensor-difference matrix coming from a unitary diagonalization. -/
+private theorem rank_diagonal_tensor_difference_upper_bound
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (ω : d → ℂ) (hω : ∀ i, ω i * star (ω i) = 1) :
+    (Matrix.diagonal fun ij : d × d => 1 - ω ij.1 * star (ω ij.2)).rank ≤
+      Fintype.card (d × d) - Fintype.card d := by
+  let p : d × d → Prop := fun ij => 1 - ω ij.1 * star (ω ij.2) ≠ 0
+  have hzeroCard : Fintype.card d ≤ Fintype.card {ij : d × d // ¬ p ij} := by
+    let f : d → {ij : d × d // ¬ p ij} := fun i =>
+      ⟨(i, i), by
+        dsimp [p]
+        exact not_not.mpr (sub_eq_zero.mpr (hω i).symm)⟩
+    have hf : Function.Injective f := by
+      intro i j h
+      simpa using congrArg Prod.fst (congrArg Subtype.val h)
+    exact Fintype.card_le_of_injective f hf
+  have hcompl :
+      Fintype.card {ij : d × d // ¬ p ij} =
+        Fintype.card (d × d) - Fintype.card {ij : d × d // p ij} := by
+    simpa [p] using (Fintype.card_subtype_compl p)
+  have hp_le : Fintype.card {ij : d × d // p ij} ≤ Fintype.card (d × d) :=
+    Fintype.card_subtype_le p
+  have hsum :
+      Fintype.card {ij : d × d // p ij} + Fintype.card {ij : d × d // ¬ p ij} =
+        Fintype.card (d × d) := by
+    omega
+  have hcount :
+      Fintype.card {ij : d × d // p ij} ≤ Fintype.card (d × d) - Fintype.card d := by
+    omega
+  simpa [p] using
+    (show
+      (Matrix.diagonal fun ij : d × d => 1 - ω ij.1 * star (ω ij.2)).rank ≤
+        Fintype.card (d × d) - Fintype.card d by
+      rw [Matrix.rank_diagonal]
+      exact hcount)
+
+/-- Rank bound for `I - Uᵀ ⊗ U*` obtained from diagonalizing the unitary `U`. -/
+private theorem rank_tensor_difference_upper_bound
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (U : Matrix d d ℂ) (hU : Uᴴ * U = 1) :
+    ((1 : Matrix (d × d) (d × d) ℂ) - (Uᵀ ⊗ₖ U.map star)).rank ≤
+      Fintype.card (d × d) - Fintype.card d := by
+  obtain ⟨V, ω, hV, hω, hdiagU⟩ := unitary_diagonalization U hU
+  let P : Matrix (d × d) (d × d) ℂ := V.map star ⊗ₖ V.map star
+  let D : Matrix (d × d) (d × d) ℂ :=
+    Matrix.diagonal fun ij : d × d => ω ij.1 * star (ω ij.2)
+  let Q : Matrix (d × d) (d × d) ℂ := Vᵀ ⊗ₖ Vᵀ
+  have hVmem : V ∈ Matrix.unitaryGroup d ℂ := (Matrix.mem_unitaryGroup_iff').2 hV
+  have hVright : V * Vᴴ = 1 := (Matrix.mem_unitaryGroup_iff.mp hVmem)
+  have hPQ0 : V.map star * Vᵀ = 1 := by
+    simpa using congrArg Matrix.transpose hVright
+  have hPQt : P * Q = 1 := by
+    calc
+      P * Q = (V.map star * Vᵀ) ⊗ₖ (V.map star * Vᵀ) := by
+        simp [P, Q, Matrix.mul_kronecker_mul]
+      _ = (1 : Matrix d d ℂ) ⊗ₖ (1 : Matrix d d ℂ) := by
+        ext i j
+        rw [Matrix.kroneckerMap_apply, Matrix.kroneckerMap_apply]
+        rw [show (V.map star * Vᵀ) i.1 j.1 = (1 : Matrix d d ℂ) i.1 j.1 by
+              simpa using congrArg (fun M => M i.1 j.1) hPQ0]
+        rw [show (V.map star * Vᵀ) i.2 j.2 = (1 : Matrix d d ℂ) i.2 j.2 by
+              simpa using congrArg (fun M => M i.2 j.2) hPQ0]
+      _ = 1 := by
+        exact one_kronecker_one (α := ℂ) (m := d) (n := d)
+  have hUt : Uᵀ = V.map star * Matrix.diagonal ω * Vᵀ := by
+    simpa [Matrix.transpose_mul, Matrix.mul_assoc] using congrArg Matrix.transpose hdiagU
+  have hUs : U.map star = V.map star * Matrix.diagonal (fun i => star (ω i)) * Vᵀ := by
+    simpa [Matrix.conjTranspose, Matrix.mul_assoc, Function.comp_def] using
+      congrArg (fun M => M.map star) hdiagU
+  have hTensor : Uᵀ ⊗ₖ U.map star = P * D * Q := by
+    calc
+      Uᵀ ⊗ₖ U.map star =
+          (V.map star * Matrix.diagonal ω * Vᵀ) ⊗ₖ
+            (V.map star * Matrix.diagonal (fun i => star (ω i)) * Vᵀ) := by
+              rw [hUt, hUs]
+      _ = ((V.map star * Matrix.diagonal ω) ⊗ₖ
+            (V.map star * Matrix.diagonal (fun i => star (ω i)))) * (Vᵀ ⊗ₖ Vᵀ) := by
+              rw [mul_kronecker_mul]
+      _ = ((V.map star ⊗ₖ V.map star) *
+            (Matrix.diagonal ω ⊗ₖ Matrix.diagonal (fun i => star (ω i)))) * (Vᵀ ⊗ₖ Vᵀ) := by
+              rw [mul_kronecker_mul]
+      _ = P * D * Q := by
+              simp [P, D, Q, diagonal_kronecker_diagonal, Matrix.mul_assoc]
+  have hDiff :
+      (1 : Matrix (d × d) (d × d) ℂ) - (Uᵀ ⊗ₖ U.map star) = P * ((1 : Matrix _ _ ℂ) - D) * Q := by
+    calc
+      (1 : Matrix (d × d) (d × d) ℂ) - (Uᵀ ⊗ₖ U.map star) = P * Q - P * D * Q := by
+        rw [hPQt, hTensor]
+      _ = P * Q - P * (D * Q) := by
+        simp [Matrix.mul_assoc]
+      _ = P * (Q - D * Q) := by
+        rw [← Matrix.mul_sub]
+      _ = P * (((1 : Matrix (d × d) (d × d) ℂ) - D) * Q) := by
+        simp [Matrix.sub_mul]
+      _ = P * ((1 : Matrix (d × d) (d × d) ℂ) - D) * Q := by
+        simp [Matrix.mul_assoc]
+  let E : Matrix (d × d) (d × d) ℂ :=
+    Matrix.diagonal fun ij : d × d => 1 - ω ij.1 * star (ω ij.2)
+  have hED : (1 : Matrix (d × d) (d × d) ℂ) - D = E := by
+    ext i j
+    by_cases hij : i = j <;> simp [D, E, hij]
+  have hRank :
+      ((1 : Matrix (d × d) (d × d) ℂ) - (Uᵀ ⊗ₖ U.map star)).rank ≤ E.rank := by
+    rw [hDiff, hED]
+    calc
+      (P * E * Q).rank ≤ (P * E).rank := by
+        simpa [Matrix.mul_assoc] using Matrix.rank_mul_le_left (P * E) Q
+      _ ≤ E.rank := Matrix.rank_mul_le_right P E
+  exact le_trans hRank (rank_diagonal_tensor_difference_upper_bound ω hω)
+
+/-- The vectorization/Uhlmann part of the positive-gap contradiction, proved locally
+    from standard background inputs. -/
+private theorem partialTranspose_rank_upper_bound
+    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
+    {X : Matrix (d × d) (d × d) ℂ} :
+    X ≠ 0 →
+    Matrix.IsHermitian X →
+    Matrix.trace X = 0 →
+    partialTraceLeft d d X = 0 →
+    X.rank = 2 →
+    (partialTransposeMap d d X).rank ≤ Fintype.card (d × d) - Fintype.card d := by
+  intro hX0 hXh htr hpt hr
+  obtain ⟨c, ψ, φ, hc, hdecomp⟩ :=
+    rank_two_traceless_hermitian_decomposition hX0 hXh htr hr
+  have hred :
+      partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) =
+        partialTraceLeft d d (Matrix.vecMulVec φ (star φ)) := by
+    have hptLin :
+        partialTraceLeft d d
+            (c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ))) =
+          c •
+            (partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) -
+              partialTraceLeft d d (Matrix.vecMulVec φ (star φ))) := by
+      ext i j
+      calc
+        (∑ x, c * (Matrix.vecMulVec ψ (star ψ) (x, i) (x, j) -
+              Matrix.vecMulVec φ (star φ) (x, i) (x, j))) =
+            ∑ x, (c * Matrix.vecMulVec ψ (star ψ) (x, i) (x, j) -
+              c * Matrix.vecMulVec φ (star φ) (x, i) (x, j)) := by
+                refine Finset.sum_congr rfl ?_
+                intro x hx
+                ring
+        _ = ∑ x, c * Matrix.vecMulVec ψ (star ψ) (x, i) (x, j) -
+              ∑ x, c * Matrix.vecMulVec φ (star φ) (x, i) (x, j) := by
+                rw [Finset.sum_sub_distrib]
+        _ = c * (∑ a, Matrix.vecMulVec ψ (star ψ) (a, i) (a, j) -
+              ∑ a, Matrix.vecMulVec φ (star φ) (a, i) (a, j)) := by
+                rw [← Finset.mul_sum, ← Finset.mul_sum]
+                ring
+    have hzero :
+        c •
+          (partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) -
+            partialTraceLeft d d (Matrix.vecMulVec φ (star φ))) = 0 := by
+      rw [← hptLin]
+      simpa [hdecomp] using hpt
+    have hsub :
+        partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) -
+          partialTraceLeft d d (Matrix.vecMulVec φ (star φ)) = 0 :=
+      (smul_eq_zero.mp hzero).resolve_left hc
+    exact sub_eq_zero.mp hsub
+  obtain ⟨U, hU, hphi⟩ := uhlmann_theorem_pure ψ φ hred
+  let A : Matrix d d ℂ := fun i j => ψ (i, j)
+  have hphiA : φ = vecKetGen (U * A) := by
+    funext ij
+    rw [hphi]
+    simp [vecKetGen, A, Matrix.mul_apply]
+  let L : Matrix (d × d) (d × d) ℂ := ((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d
+  let R : Matrix (d × d) (d × d) ℂ := (1 : Matrix d d ℂ) ⊗ₖ A.map star
+  let M : Matrix (d × d) (d × d) ℂ := (1 : Matrix (d × d) (d × d) ℂ) - (Uᵀ ⊗ₖ U.map star)
+  have hKrLeft :
+      ((1 : Matrix d d ℂ) ⊗ₖ (Aᵀ * Uᵀ)) =
+        (((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * ((1 : Matrix d d ℂ) ⊗ₖ Uᵀ)) := by
+    simpa using
+      (mul_kronecker_mul
+        (1 : Matrix d d ℂ) (1 : Matrix d d ℂ) Aᵀ Uᵀ)
+  have hKrRight :
+      ((1 : Matrix d d ℂ) ⊗ₖ (U.map star * A.map star)) =
+        (((1 : Matrix d d ℂ) ⊗ₖ U.map star) * ((1 : Matrix d d ℂ) ⊗ₖ A.map star)) := by
+    simpa using
+      (mul_kronecker_mul
+        (1 : Matrix d d ℂ) (1 : Matrix d d ℂ) (U.map star) (A.map star))
+  have hKrMiddle :
+      ((Uᵀ ⊗ₖ (1 : Matrix d d ℂ)) * ((1 : Matrix d d ℂ) ⊗ₖ U.map star)) =
+        (Uᵀ ⊗ₖ U.map star) := by
+    simpa using
+      (mul_kronecker_mul
+        Uᵀ (1 : Matrix d d ℂ) (1 : Matrix d d ℂ) (U.map star)).symm
+  have hSecond :
+      (((1 : Matrix d d ℂ) ⊗ₖ (U * A)ᵀ) * swapMatrixGen d) *
+          ((1 : Matrix d d ℂ) ⊗ₖ (U * A).map star) =
+        L * (Uᵀ ⊗ₖ U.map star) * R := by
+    calc
+      (((1 : Matrix d d ℂ) ⊗ₖ (U * A)ᵀ) * swapMatrixGen d) *
+          ((1 : Matrix d d ℂ) ⊗ₖ (U * A).map star)
+        = ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * ((1 : Matrix d d ℂ) ⊗ₖ Uᵀ)) *
+            swapMatrixGen d) *
+            (((1 : Matrix d d ℂ) ⊗ₖ U.map star) * ((1 : Matrix d d ℂ) ⊗ₖ A.map star)) := by
+              rw [show (U * A)ᵀ = Aᵀ * Uᵀ by simp [Matrix.transpose_mul]]
+              rw [show (U * A).map star = U.map star * A.map star by
+                    ext i j
+                    simp [Matrix.mul_apply]]
+              rw [hKrLeft, hKrRight]
+      _ = ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * (((1 : Matrix d d ℂ) ⊗ₖ Uᵀ) * swapMatrixGen d)) *
+            ((1 : Matrix d d ℂ) ⊗ₖ U.map star)) *
+            ((1 : Matrix d d ℂ) ⊗ₖ A.map star) := by
+              simp [Matrix.mul_assoc]
+      _ = ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * (swapMatrixGen d * (Uᵀ ⊗ₖ (1 : Matrix d d ℂ)))) *
+            ((1 : Matrix d d ℂ) ⊗ₖ U.map star)) *
+            ((1 : Matrix d d ℂ) ⊗ₖ A.map star) := by
+              rw [← lemma6_gen (d := d) (X := Uᵀ) (Y := (1 : Matrix d d ℂ))]
+      _ = ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) *
+            ((Uᵀ ⊗ₖ (1 : Matrix d d ℂ)) * ((1 : Matrix d d ℂ) ⊗ₖ U.map star))) *
+            ((1 : Matrix d d ℂ) ⊗ₖ A.map star) := by
+              simp [Matrix.mul_assoc]
+      _ = ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) * (Uᵀ ⊗ₖ U.map star)) *
+            ((1 : Matrix d d ℂ) ⊗ₖ A.map star) := by
+              rw [hKrMiddle]
+      _ = L * (Uᵀ ⊗ₖ U.map star) * R := by
+              simp [L, R, Matrix.mul_assoc]
+  have hFactor :
+      partialTransposeMap d d X = c • (L * M * R) := by
+    have hdecompA :
+        X =
+          c •
+            (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A)) -
+              Matrix.vecMulVec (vecKetGen (U * A)) (star (vecKetGen (U * A)))) := by
+      simpa [vecKetGen, A, hphiA] using hdecomp
+    rw [hdecompA]
+    have hinner :
+        L * R - L * (Uᵀ ⊗ₖ U.map star) * R =
+          L * M * R := by
+      calc
+        L * R - L * (Uᵀ ⊗ₖ U.map star) * R =
+            L * R - L * ((Uᵀ ⊗ₖ U.map star) * R) := by
+              simp [Matrix.mul_assoc]
+        _ = L * (R - (Uᵀ ⊗ₖ U.map star) * R) := by
+          rw [← Matrix.mul_sub]
+        _ = L * (M * R) := by
+          simp [M, Matrix.sub_mul]
+        _ = L * M * R := by
+          simp [Matrix.mul_assoc]
+    calc
+      partialTransposeMap d d
+          (c •
+            (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A)) -
+              Matrix.vecMulVec (vecKetGen (U * A)) (star (vecKetGen (U * A))))) =
+          c •
+            (partialTransposeMap d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) -
+              partialTransposeMap d d
+                (Matrix.vecMulVec (vecKetGen (U * A)) (star (vecKetGen (U * A))))) := by
+              simp
+      _ = c •
+            ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) * ((1 : Matrix d d ℂ) ⊗ₖ A.map star) -
+              (((1 : Matrix d d ℂ) ⊗ₖ (U * A)ᵀ) * swapMatrixGen d) *
+                ((1 : Matrix d d ℂ) ⊗ₖ (U * A).map star)) := by
+              rw [lemma7_gen (d := d) A A, lemma7_gen (d := d) (U * A) (U * A)]
+      _ = c • (L * M * R) := by
+              have hinner' :
+                  ((((1 : Matrix d d ℂ) ⊗ₖ Aᵀ) * swapMatrixGen d) *
+                      ((1 : Matrix d d ℂ) ⊗ₖ A.map star)) -
+                    (((1 : Matrix d d ℂ) ⊗ₖ (U * A)ᵀ) * swapMatrixGen d) *
+                      ((1 : Matrix d d ℂ) ⊗ₖ (U * A).map star) =
+                    L * M * R := by
+                      rw [hSecond]
+                      simpa [L, R] using hinner
+              exact congrArg (fun Z => c • Z) hinner'
+  have hRank :
+      (partialTransposeMap d d X).rank ≤ M.rank := by
+    rw [hFactor]
+    calc
+      ((c • (L * M * R))).rank ≤ (L * M * R).rank := by
+        simpa [Algebra.smul_def, Matrix.mul_assoc] using
+          Matrix.rank_mul_le_right (c • (1 : Matrix (d × d) (d × d) ℂ)) (L * M * R)
+      _ ≤ (L * M).rank := by
+        simpa [Matrix.mul_assoc] using Matrix.rank_mul_le_left (L * M) R
+      _ ≤ M.rank := Matrix.rank_mul_le_right L M
+  exact le_trans hRank (rank_tensor_difference_upper_bound U hU)
+
 /-- The strictness theorem for Theorem 1 in finite dimensions, proved from the paper's
     maximizer and Uhlmann/rank-bound background inputs. -/
 theorem theorem_not_tight

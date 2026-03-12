@@ -127,16 +127,36 @@ axiom exists_maximizing_state
         diamondOp ((transposeMap d).comp (idMinus T)) ∧
       tensorWithIdentity d d (idMinus T) ρ.1 ≠ 0
 
-/-- Background rank bound coming from the Uhlmann/vectorization part of the positive-gap proof. -/
-axiom partialTranspose_rank_upper_bound
+/-- Background spectral form of a nonzero rank-two traceless Hermitian matrix. -/
+axiom rank_two_traceless_hermitian_decomposition
     {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
     {X : Matrix (d × d) (d × d) ℂ} :
     X ≠ 0 →
     Matrix.IsHermitian X →
     Matrix.trace X = 0 →
-    partialTraceLeft d d X = 0 →
     X.rank = 2 →
-    (partialTransposeMap d d X).rank ≤ Fintype.card (d × d) - Fintype.card d
+    ∃ c : ℂ, ∃ ψ φ : d × d → ℂ,
+      c ≠ 0 ∧
+      X = c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ))
+
+/-- Background pure-state form of Uhlmann's theorem. -/
+axiom uhlmann_theorem_pure
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (ψ φ : d × d → ℂ)
+    (hred :
+      partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) =
+        partialTraceLeft d d (Matrix.vecMulVec φ (star φ))) :
+    ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧
+      φ = fun ij => ∑ a, U ij.1 a * ψ (a, ij.2)
+
+/-- Background unitary diagonalization theorem. -/
+axiom unitary_diagonalization
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (U : Matrix d d ℂ) (hU : Uᴴ * U = 1) :
+    ∃ V : Matrix d d ℂ, ∃ ω : d → ℂ,
+      Vᴴ * V = 1 ∧
+      (∀ i, ω i * star (ω i) = 1) ∧
+      U = V * Matrix.diagonal ω * Vᴴ
 
 /-- Background asymptotic cotangent lower bound used to pass from finite `d`
     to the universal constant `2 / π`. -/
