@@ -1,12 +1,19 @@
 import Diamond.Setups
-import Diamond.Lemma1
-import Diamond.Lemma2
-import Diamond.Lemma3
-import Diamond.Lemma4
-import Diamond.Lemma5
-import Diamond.Lemma6
-import Diamond.Lemma7
-import Diamond.Remark1
-import Diamond.Theorem1
-import Diamond.Corollary1
-import Diamond.Corollary2
+import Diamond.StandardFacts
+
+import Diamond.Theorem.Lemma1
+import Diamond.Theorem.Lemma2
+import Diamond.Theorem.Lemma3
+import Diamond.Theorem.Theorem1
+import Diamond.Theorem.Remark1
+
+import Diamond.PositiveGap.Lemma4
+import Diamond.PositiveGap.Lemma5
+import Diamond.PositiveGap.Lemma6
+import Diamond.PositiveGap.Lemma7
+import Diamond.PositiveGap.Corollary1
+import Diamond.PositiveGap.NotTight
+
+import Diamond.EndMatter.Eq7
+import Diamond.EndMatter.Eq8
+import Diamond.EndMatter.Corollary2

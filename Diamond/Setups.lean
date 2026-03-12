@@ -34,9 +34,13 @@ def hsNorm
   ‖X‖
 
 /-- Trace norm, realized as the sum of the singular values. -/
-def traceNormOp
+def traceNorm
     {d : Type u} [Fintype d] [DecidableEq d] (X : Matrix d d ℂ) : ℝ :=
   ∑ i, Real.sqrt ((Matrix.isHermitian_conjTranspose_mul_self X).eigenvalues i)
+
+abbrev traceNormOp
+    {d : Type u} [Fintype d] [DecidableEq d] (X : Matrix d d ℂ) : ℝ :=
+  traceNorm X
 
 abbrev hsNormOp
     {m n : Type u} [Fintype m] [DecidableEq m] [Fintype n] [DecidableEq n]
@@ -56,10 +60,6 @@ def IsHermiticityPreserving
 
 structure IsQuantumChannel
     {d : Type u} [Fintype d] [DecidableEq d] (T : Channel d) where
-  krausRank : ℕ
-  kraus : Fin krausRank → Matrix d d ℂ
-  map_eq : ∀ X, T X = ∑ i, kraus i * X * (kraus i)ᴴ
-  kraus_complete : ∑ i, (kraus i)ᴴ * kraus i = 1
   trace_preserving : ∀ X, Matrix.trace (T X) = Matrix.trace X
   hermiticity_preserving : IsHermiticityPreserving T
 

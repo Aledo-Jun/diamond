@@ -1,0 +1,545 @@
+import Diamond.Setups
+import Diamond.StandardFacts
+import Diamond.Theorem.Lemma1
+import Diamond.Theorem.Lemma2
+import Diamond.Theorem.Lemma3
+import Diamond.Theorem.Theorem1
+import Diamond.PositiveGap.Lemma5
+import Diamond.PositiveGap.Lemma6
+import Diamond.PositiveGap.Lemma7
+import Diamond.PositiveGap.Corollary1
+
+open scoped BigOperators
+open scoped ComplexOrder
+open scoped Kronecker
+open scoped MatrixOrder
+open scoped Matrix.Norms.Frobenius
+open Matrix
+
+namespace Diamond
+
+universe u
+
+noncomputable section
+
+/-- Expand a square of a finite sum into diagonal and off-diagonal parts. -/
+private lemma sq_sum_expand_offDiag
+    {ι : Type u} [Fintype ι] (p : ι → ℝ) :
+    (∑ i, p i) ^ 2 =
+      (∑ i, (p i) ^ 2) + ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
+  classical
+  calc
+    (∑ i, p i) ^ 2 = (∑ i, p i) * (∑ j, p j) := by
+      ring
+    _ = ∑ x ∈ ((Finset.univ : Finset ι) ×ˢ (Finset.univ : Finset ι)), p x.1 * p x.2 := by
+      calc
+        (∑ i, p i) * (∑ j, p j) = ∑ i, ∑ j, p i * p j := by
+          simpa using (Fintype.sum_mul_sum p p)
+        _ = ∑ x ∈ ((Finset.univ : Finset ι) ×ˢ (Finset.univ : Finset ι)), p x.1 * p x.2 := by
+          rw [← Finset.sum_product']
+    _ = ∑ x ∈ (Finset.univ : Finset ι).diag ∪ (Finset.univ : Finset ι).offDiag,
+          p x.1 * p x.2 := by
+      rw [← Finset.diag_union_offDiag]
+    _ = (∑ x ∈ (Finset.univ : Finset ι).diag, p x.1 * p x.2) +
+          ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
+      rw [Finset.sum_union (Finset.disjoint_diag_offDiag (s := (Finset.univ : Finset ι)))]
+    _ = (∑ i, (p i) ^ 2) + ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
+      rw [Finset.sum_diag]
+      simp [pow_two]
+
+/-- Equality in `∑ p_i^2 ≤ (∑ p_i)^2` forces all mixed terms to vanish. -/
+private lemma pairwise_zero_of_sum_sq_eq_sq_sum
+    {ι : Type u} [Fintype ι] {p : ι → ℝ}
+    (hp : ∀ i, 0 ≤ p i)
+    (heq : (∑ i, (p i) ^ 2) = (∑ i, p i) ^ 2) :
+    ∀ i j, i ≠ j → p i = 0 ∨ p j = 0 := by
+  classical
+  have hoffDiag_zero : ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 = 0 := by
+    have hexpand := sq_sum_expand_offDiag p
+    linarith
+  have hpair_zero :
+      ∀ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 = 0 := by
+    exact
+      (Finset.sum_eq_zero_iff_of_nonneg
+        (fun x hx => mul_nonneg (hp x.1) (hp x.2))).1 hoffDiag_zero
+  intro i j hij
+  have hmem : (i, j) ∈ (Finset.univ : Finset ι).offDiag := by
+    exact Finset.mem_offDiag.2 ⟨Finset.mem_univ i, Finset.mem_univ j, hij⟩
+  have hmul : p i * p j = 0 := hpair_zero (i, j) hmem
+  by_cases hi : p i = 0
+  · exact Or.inl hi
+  · right
+    exact mul_eq_zero.mp hmul |>.resolve_left hi
+
+/-- If at most one entry can be nonzero and some entry is nonzero, then that entry is unique. -/
+private lemma existsUnique_nonzero_of_pairwise_zero
+    {ι : Type u} {p : ι → ℝ}
+    (hexists : ∃ i, p i ≠ 0)
+    (hpair : ∀ i j, i ≠ j → p i = 0 ∨ p j = 0) :
+    ∃! i, p i ≠ 0 := by
+  rcases hexists with ⟨i, hi⟩
+  refine ⟨i, hi, ?_⟩
+  intro j hj
+  by_cases hji : j = i
+  · simpa using hji
+  · have hij : i ≠ j := by
+      simpa [eq_comm] using hji
+    rcases hpair i j hij with hzero | hzero
+    · exact (hi hzero).elim
+    · exact (hj hzero).elim
+
+/-- Algebraic variance identity for finite real families. -/
+private lemma sum_sq_sub_avg_eq_aux
+    {ι : Type u} [Fintype ι] [Nonempty ι] {a : ι → ℝ} :
+    let avg : ℝ := (∑ i, a i) / (Fintype.card ι : ℝ)
+    ∑ i, (a i) ^ 2 - 2 * avg * ∑ i, a i + (Fintype.card ι : ℝ) * avg ^ 2 =
+      ∑ i, (a i) ^ 2 - (∑ i, a i) ^ 2 / (Fintype.card ι : ℝ) := by
+  let avg : ℝ := (∑ i, a i) / (Fintype.card ι : ℝ)
+  have hcard_ne : (Fintype.card ι : ℝ) ≠ 0 := by
+    positivity
+  field_simp [avg, hcard_ne]
+  ring
+
+/-- The sum of squared deviations from the average. -/
+private lemma sum_sq_sub_avg_eq
+    {ι : Type u} [Fintype ι] [Nonempty ι] {a : ι → ℝ} :
+    let avg : ℝ := (∑ i, a i) / (Fintype.card ι : ℝ)
+    ∑ i, (a i - avg) ^ 2 =
+      ∑ i, (a i) ^ 2 - (∑ i, a i) ^ 2 / (Fintype.card ι : ℝ) := by
+  let avg : ℝ := (∑ i, a i) / (Fintype.card ι : ℝ)
+  calc
+    ∑ i, (a i - avg) ^ 2 =
+        ∑ i, (a i) ^ 2 - 2 * avg * ∑ i, a i + (Fintype.card ι : ℝ) * avg ^ 2 := by
+          calc
+            ∑ i, (a i - avg) ^ 2 = ∑ i, ((a i) ^ 2 - 2 * a i * avg + avg ^ 2) := by
+              refine Finset.sum_congr rfl ?_
+              intro i hi
+              ring
+            _ = ∑ i, (a i) ^ 2 - 2 * avg * ∑ i, a i + (Fintype.card ι : ℝ) * avg ^ 2 := by
+              simp [Finset.sum_sub_distrib, Finset.sum_add_distrib, Finset.sum_mul,
+                mul_comm, mul_left_comm]
+    _ = ∑ i, (a i) ^ 2 - (∑ i, a i) ^ 2 / (Fintype.card ι : ℝ) := by
+      simpa using (sum_sq_sub_avg_eq_aux (a := a))
+
+/-- Equality in Cauchy--Schwarz for a finite real family forces all entries to be equal. -/
+private lemma all_equal_of_sq_sum_eq_card_mul_sum_sq
+    {ι : Type u} [Fintype ι] [Nonempty ι] {a : ι → ℝ}
+    (heq : (∑ i, a i) ^ 2 = (Fintype.card ι : ℝ) * ∑ i, (a i) ^ 2) :
+    ∀ i j, a i = a j := by
+  let avg : ℝ := (∑ i, a i) / (Fintype.card ι : ℝ)
+  have hzero : ∑ i, (a i - avg) ^ 2 = 0 := by
+    rw [sum_sq_sub_avg_eq]
+    have hcard_ne : (Fintype.card ι : ℝ) ≠ 0 := by
+      positivity
+    have hdiv : (∑ i, a i) ^ 2 / (Fintype.card ι : ℝ) = ∑ i, (a i) ^ 2 := by
+      exact (div_eq_iff hcard_ne).2 (by simpa [mul_comm] using heq)
+    linarith
+  have hsq_zero' := (Finset.sum_eq_zero_iff_of_nonneg (fun i hi => sq_nonneg _)).1 hzero
+  intro i j
+  have hi : a i = avg := by
+    have hsq : (a i - avg) ^ 2 = 0 := hsq_zero' i (by simp)
+    nlinarith
+  have hj : a j = avg := by
+    have hsq : (a j - avg) ^ 2 = 0 := hsq_zero' j (by simp)
+    nlinarith
+  linarith
+
+/-- Equality case of paper Lemma 1:
+    a nonzero traceless Hermitian matrix saturating Lemma 1 has rank `2`. -/
+theorem lemma1_eq_imp_rank_two
+    {d : Type u} [Fintype d] [DecidableEq d]
+    {X : Matrix (d × d) (d × d) ℂ}
+    (hXh : Matrix.IsHermitian X) (htr : Matrix.trace X = 0) (hX0 : X ≠ 0)
+    (heq : hsNormOp X = (1 / Real.sqrt 2) * traceNormOp X) :
+    Matrix.rank X = 2 := by
+  let p : d × d → ℝ := fun i => max (hXh.eigenvalues i) 0
+  let q : d × d → ℝ := fun i => max (-hXh.eigenvalues i) 0
+  have hp_nonneg : ∀ i, 0 ≤ p i := by
+    intro i
+    simp [p]
+  have hq_nonneg : ∀ i, 0 ≤ q i := by
+    intro i
+    simp [q]
+  have habs : ∀ i, |hXh.eigenvalues i| = p i + q i := by
+    intro i
+    by_cases hi : 0 ≤ hXh.eigenvalues i
+    · simp [p, q, hi, abs_of_nonneg hi]
+    · have hi' : hXh.eigenvalues i < 0 := lt_of_not_ge hi
+      simp [p, q, hi'.le, abs_of_neg hi']
+  have hsub : ∀ i, hXh.eigenvalues i = p i - q i := by
+    intro i
+    by_cases hi : 0 ≤ hXh.eigenvalues i
+    · simp [p, q, hi]
+    · have hi' : hXh.eigenvalues i < 0 := lt_of_not_ge hi
+      simp [p, q, hi'.le]
+  have hsq : ∀ i, (hXh.eigenvalues i) ^ 2 = (p i) ^ 2 + (q i) ^ 2 := by
+    intro i
+    by_cases hi : 0 ≤ hXh.eigenvalues i
+    · simp [p, q, hi, pow_two]
+    · have hi' : hXh.eigenvalues i < 0 := lt_of_not_ge hi
+      simp [p, q, hi'.le, pow_two]
+  have hsum_zero : ∑ i, hXh.eigenvalues i = 0 := by
+    have htraceC : (∑ i, ((hXh.eigenvalues i : ℝ) : ℂ)) = 0 := by
+      simpa [hXh.trace_eq_sum_eigenvalues] using htr
+    exact_mod_cast congrArg Complex.re htraceC
+  have hpq : ∑ i, p i = ∑ i, q i := by
+    have hsum_sub : ∑ i, (p i - q i) = 0 := by
+      simpa [hsub] using hsum_zero
+    rw [Finset.sum_sub_distrib] at hsum_sub
+    linarith
+  have htraceNorm : traceNormOp X = 2 * ∑ i, p i := by
+    calc
+      traceNormOp X = ∑ i, |hXh.eigenvalues i| := by
+        simpa using traceNormOp_hermitian_eq_sum_abs_eigenvalues hXh
+      _ = ∑ i, (p i + q i) := by
+        simp [habs]
+      _ = ∑ i, p i + ∑ i, q i := by
+        rw [Finset.sum_add_distrib]
+      _ = 2 * ∑ i, p i := by
+        rw [hpq]
+        ring
+  have hhsNormSq : hsNormOp X ^ 2 = ∑ i, (hXh.eigenvalues i) ^ 2 := by
+    rw [hsNorm_sq_eq_re_trace_conjTranspose_mul_self,
+      hermitian_re_trace_conjTranspose_mul_self_eq_sum_sq_eigenvalues hXh]
+  have hmain_eq : ∑ i, (hXh.eigenvalues i) ^ 2 = 2 * (∑ i, p i) ^ 2 := by
+    have hsqrt2_ne : Real.sqrt 2 ≠ 0 := by
+      positivity
+    have hsqeq : hsNormOp X ^ 2 = ((1 / Real.sqrt 2) * traceNormOp X) ^ 2 := by
+      exact congrArg (fun t : ℝ => t ^ 2) heq
+    rw [hhsNormSq, htraceNorm] at hsqeq
+    have hrhs : ((1 / Real.sqrt 2) * (2 * ∑ i, p i)) ^ 2 = 2 * (∑ i, p i) ^ 2 := by
+      field_simp [pow_two, hsqrt2_ne]
+      nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
+    rw [hrhs] at hsqeq
+    exact hsqeq
+  have hp_eq : (∑ i, (p i) ^ 2) = (∑ i, p i) ^ 2 := by
+    have hp_le : ∑ i, (p i) ^ 2 ≤ (∑ i, p i) ^ 2 :=
+      Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ => hp_nonneg i)
+    have hq_le : ∑ i, (q i) ^ 2 ≤ (∑ i, q i) ^ 2 :=
+      Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ => hq_nonneg i)
+    have hq_le' : ∑ i, (q i) ^ 2 ≤ (∑ i, p i) ^ 2 := by
+      simpa [hpq] using hq_le
+    have haux : ∑ i, (p i) ^ 2 + ∑ i, (q i) ^ 2 = 2 * (∑ i, p i) ^ 2 := by
+      calc
+        ∑ i, (p i) ^ 2 + ∑ i, (q i) ^ 2 = ∑ i, (hXh.eigenvalues i) ^ 2 := by
+          symm
+          simp [hsq, Finset.sum_add_distrib]
+        _ = 2 * (∑ i, p i) ^ 2 := hmain_eq
+    nlinarith
+  have hq_eq : (∑ i, (q i) ^ 2) = (∑ i, q i) ^ 2 := by
+    have hp_le : ∑ i, (p i) ^ 2 ≤ (∑ i, p i) ^ 2 :=
+      Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ => hp_nonneg i)
+    have hp_le' : ∑ i, (p i) ^ 2 ≤ (∑ i, q i) ^ 2 := by
+      simpa [hpq] using hp_le
+    have hq_le : ∑ i, (q i) ^ 2 ≤ (∑ i, q i) ^ 2 :=
+      Finset.sum_sq_le_sq_sum_of_nonneg (fun i _ => hq_nonneg i)
+    have haux : ∑ i, (p i) ^ 2 + ∑ i, (q i) ^ 2 = 2 * (∑ i, q i) ^ 2 := by
+      calc
+        ∑ i, (p i) ^ 2 + ∑ i, (q i) ^ 2 = ∑ i, (hXh.eigenvalues i) ^ 2 := by
+          symm
+          simp [hsq, Finset.sum_add_distrib]
+        _ = 2 * (∑ i, p i) ^ 2 := hmain_eq
+        _ = 2 * (∑ i, q i) ^ 2 := by
+          rw [hpq]
+    nlinarith
+  have hp_pair : ∀ i j, i ≠ j → p i = 0 ∨ p j = 0 :=
+    pairwise_zero_of_sum_sq_eq_sq_sum hp_nonneg hp_eq
+  have hq_pair : ∀ i j, i ≠ j → q i = 0 ∨ q j = 0 :=
+    pairwise_zero_of_sum_sq_eq_sq_sum hq_nonneg hq_eq
+  have hsum_p_ne : ∑ i, p i ≠ 0 := by
+    intro hp0
+    have hsum_abs0 : ∑ i, |hXh.eigenvalues i| = 0 := by
+      rw [← traceNormOp_hermitian_eq_sum_abs_eigenvalues hXh, htraceNorm, hp0]
+      ring
+    have habs0 : ∀ i, |hXh.eigenvalues i| = 0 := by
+      intro i
+      exact
+        (Finset.sum_eq_zero_iff_of_nonneg (fun j hj => abs_nonneg _)).1 hsum_abs0 i (by simp)
+    have heig0 : hXh.eigenvalues = 0 := by
+      funext i
+      exact abs_eq_zero.mp (habs0 i)
+    exact hX0 ((Matrix.IsHermitian.eigenvalues_eq_zero_iff hXh).1 heig0)
+  have hsum_q_ne : ∑ i, q i ≠ 0 := by
+    rw [← hpq]
+    exact hsum_p_ne
+  obtain ⟨iPos, hiPos, hiPos_unique⟩ :=
+    existsUnique_nonzero_of_pairwise_zero
+      (by
+        rcases Finset.exists_ne_zero_of_sum_ne_zero hsum_p_ne with ⟨i, _, hi⟩
+        exact ⟨i, hi⟩) hp_pair
+  obtain ⟨iNeg, hiNeg, hiNeg_unique⟩ :=
+    existsUnique_nonzero_of_pairwise_zero
+      (by
+        rcases Finset.exists_ne_zero_of_sum_ne_zero hsum_q_ne with ⟨i, _, hi⟩
+        exact ⟨i, hi⟩) hq_pair
+  have hPos_eig_nonzero : hXh.eigenvalues iPos ≠ 0 := by
+    by_cases hnonneg : 0 ≤ hXh.eigenvalues iPos
+    · have hpval : p iPos = hXh.eigenvalues iPos := by
+        simp [p, hnonneg]
+      exact hpval ▸ hiPos
+    · have hneg : hXh.eigenvalues iPos < 0 := lt_of_not_ge hnonneg
+      have hpzero : p iPos = 0 := by
+        simp [p, hneg.le]
+      exact (hiPos hpzero).elim
+  have hNeg_eig_nonzero : hXh.eigenvalues iNeg ≠ 0 := by
+    by_cases hnonneg : 0 ≤ hXh.eigenvalues iNeg
+    · have hqzero : q iNeg = 0 := by
+        simp [q, hnonneg]
+      exact (hiNeg hqzero).elim
+    · have hneg : hXh.eigenvalues iNeg < 0 := lt_of_not_ge hnonneg
+      have hqval : q iNeg = -hXh.eigenvalues iNeg := by
+        simp [q, hneg.le]
+      intro heig
+      apply hiNeg
+      simp [hqval, heig]
+  have hij : iPos ≠ iNeg := by
+    intro hijEq
+    subst iNeg
+    by_cases hnonneg : 0 ≤ hXh.eigenvalues iPos
+    · have hqzero : q iPos = 0 := by
+        simp [q, hnonneg]
+      exact hiNeg hqzero
+    · have hneg : hXh.eigenvalues iPos < 0 := lt_of_not_ge hnonneg
+      have hpzero : p iPos = 0 := by
+        simp [p, hneg.le]
+      exact hiPos hpzero
+  have hsupport : ∀ i, hXh.eigenvalues i ≠ 0 → i = iPos ∨ i = iNeg := by
+    intro i hi
+    by_cases hnonneg : 0 ≤ hXh.eigenvalues i
+    · left
+      have hp_i : p i ≠ 0 := by
+        have hpval : p i = hXh.eigenvalues i := by
+          simp [p, hnonneg]
+        exact hpval ▸ hi
+      exact hiPos_unique i hp_i
+    · right
+      have hneg : hXh.eigenvalues i < 0 := lt_of_not_ge hnonneg
+      have hq_i : q i ≠ 0 := by
+        have hqval : q i = -hXh.eigenvalues i := by
+          simp [q, hneg.le]
+        rw [hqval]
+        exact neg_ne_zero.mpr hi
+      exact hiNeg_unique i hq_i
+  have hle : Fintype.card {i : d × d // hXh.eigenvalues i ≠ 0} ≤ 2 := by
+    classical
+    let f : {i : d × d // hXh.eigenvalues i ≠ 0} → {i : d × d // i = iPos ∨ i = iNeg} :=
+      fun i => ⟨i.1, hsupport i.1 i.2⟩
+    have hf : Function.Injective f := by
+      intro a b h
+      apply Subtype.ext
+      simpa using congrArg (fun z => z.1) h
+    have hcard := Fintype.card_le_of_injective f hf
+    simpa [Fintype.card_subtype_eq_or_eq_of_ne hij] using hcard
+  have hge : 2 ≤ Fintype.card {i : d × d // hXh.eigenvalues i ≠ 0} := by
+    classical
+    let g : Bool → {i : d × d // hXh.eigenvalues i ≠ 0} :=
+      fun b => cond b ⟨iPos, hPos_eig_nonzero⟩ ⟨iNeg, hNeg_eig_nonzero⟩
+    have hg : Function.Injective g := by
+      intro a b h
+      cases a <;> cases b
+      · rfl
+      · have h' : iNeg = iPos := by simpa [g] using h
+        exact (hij h'.symm).elim
+      · have h' : iPos = iNeg := by simpa [g] using h
+        exact (hij h').elim
+      · rfl
+    have hcard := Fintype.card_le_of_injective g hg
+    simpa using hcard
+  have hcard : Fintype.card {i : d × d // hXh.eigenvalues i ≠ 0} = 2 := by
+    omega
+  rw [hXh.rank_eq_card_non_zero_eigs, hcard]
+
+/-- Equality case of paper Lemma 2:
+    a nonzero matrix saturating Lemma 2 has full rank. -/
+theorem lemma2_eq_imp_full_rank
+    {d : Type u} [Fintype d] [DecidableEq d]
+    [Nonempty d]
+    {Y : Matrix (d × d) (d × d) ℂ} (hY0 : Y ≠ 0)
+    (heq : traceNormOp Y =
+      Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Y) :
+    Matrix.rank Y = Fintype.card (d × d) := by
+  let μ : d × d → ℝ := (Matrix.isHermitian_conjTranspose_mul_self Y).eigenvalues
+  have hμ_nonneg : ∀ i, 0 ≤ μ i := by
+    intro i
+    exact Matrix.eigenvalues_conjTranspose_mul_self_nonneg Y i
+  have hnorm_sq : hsNormOp Y ^ 2 = ∑ i, μ i := by
+    calc
+      hsNormOp Y ^ 2 = Complex.re (Matrix.trace (Yᴴ * Y)) := by
+        exact hsNorm_sq_eq_re_trace_conjTranspose_mul_self Y
+      _ = ∑ i, μ i := by
+        rw [(Matrix.isHermitian_conjTranspose_mul_self Y).trace_eq_sum_eigenvalues]
+        simp [μ]
+  have hsqeq : (∑ i, Real.sqrt (μ i)) ^ 2 = (Fintype.card (d × d) : ℝ) * ∑ i, μ i := by
+    have hsq := congrArg (fun t : ℝ => t ^ 2) heq
+    calc
+      (∑ i, Real.sqrt (μ i)) ^ 2 = (traceNormOp Y) ^ 2 := by
+        rfl
+      _ = (Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Y) ^ 2 := by
+        simpa using hsq
+      _ = (Fintype.card (d × d) : ℝ) * ∑ i, μ i := by
+        rw [show (Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Y) ^ 2 =
+              (Real.sqrt (Fintype.card (d × d) : ℝ)) ^ 2 * (hsNormOp Y) ^ 2 by ring]
+        rw [Real.sq_sqrt (by positivity), hnorm_sq]
+  have hall : ∀ i j, Real.sqrt (μ i) = Real.sqrt (μ j) := by
+    have hsqeq' :
+        (∑ i, Real.sqrt (μ i)) ^ 2 =
+          (Fintype.card (d × d) : ℝ) * ∑ i, (Real.sqrt (μ i)) ^ 2 := by
+      calc
+        (∑ i, Real.sqrt (μ i)) ^ 2 = (Fintype.card (d × d) : ℝ) * ∑ i, μ i := hsqeq
+        _ = (Fintype.card (d × d) : ℝ) * ∑ i, (Real.sqrt (μ i)) ^ 2 := by
+          refine congrArg ((Fintype.card (d × d) : ℝ) * ·) ?_
+          refine Finset.sum_congr rfl ?_
+          intro i hi
+          exact (Real.sq_sqrt (hμ_nonneg i)).symm
+    exact all_equal_of_sq_sum_eq_card_mul_sum_sq hsqeq'
+  have hμ_not_zero_fun : μ ≠ 0 := by
+    intro hμ0
+    have hzeroMat : Yᴴ * Y = 0 := by
+      exact
+        (Matrix.IsHermitian.eigenvalues_eq_zero_iff
+          (Matrix.isHermitian_conjTranspose_mul_self Y)).1 hμ0
+    exact hY0 ((Matrix.conjTranspose_mul_self_eq_zero).1 hzeroMat)
+  classical
+  have hex : ∃ i, μ i ≠ 0 := by
+    by_contra h
+    push_neg at h
+    exact hμ_not_zero_fun (funext h)
+  rcases hex with ⟨i0, hi0⟩
+  have hsqrt_pos : 0 < Real.sqrt (μ i0) := by
+    apply Real.sqrt_pos.2
+    exact lt_of_le_of_ne (hμ_nonneg i0) (by simpa [eq_comm] using hi0)
+  have hμ_ne : ∀ i, μ i ≠ 0 := by
+    intro i
+    have hsqrt_eq : Real.sqrt (μ i) = Real.sqrt (μ i0) := hall i i0
+    intro hzi
+    rw [hzi, Real.sqrt_zero] at hsqrt_eq
+    linarith
+  have hcard : Fintype.card {i : d × d // μ i ≠ 0} = Fintype.card (d × d) := by
+    classical
+    exact
+      Fintype.card_of_subtype
+        (s := (Finset.univ : Finset (d × d)))
+        (H := fun i => by simp [hμ_ne i])
+  calc
+    Y.rank = (Yᴴ * Y).rank := by
+      symm
+      exact Matrix.rank_conjTranspose_mul_self Y
+    _ = Fintype.card {i : d × d // μ i ≠ 0} := by
+      rw [(Matrix.isHermitian_conjTranspose_mul_self Y).rank_eq_card_non_zero_eigs]
+    _ = Fintype.card (d × d) := hcard
+
+/-- Partial transpose preserves nonzeroness because it preserves the Hilbert--Schmidt norm. -/
+private lemma partialTranspose_ne_zero_of_ne_zero
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    {X : Matrix (d × k) (d × k) ℂ} (hX : X ≠ 0) :
+    partialTransposeMap d k X ≠ 0 := by
+  intro hzero
+  have hnormY : hsNormOp (partialTransposeMap d k X) = 0 := by
+    exact (hsNormOp_eq_zero_iff).2 hzero
+  have hnormX : hsNormOp X = 0 := by
+    rw [lemma3 (d := d) (k := k) X] at hnormY
+    exact hnormY
+  exact hX ((hsNormOp_eq_zero_iff).1 hnormX)
+
+/-- The strictness theorem for Theorem 1 in finite dimensions, proved from the paper's
+    maximizer and Uhlmann/rank-bound background inputs. -/
+theorem theorem_not_tight
+    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
+    (T : Channel d) (hT : IsQuantumChannel T) (hΦ : idMinus T ≠ 0) :
+    diamondOp ((transposeMap d).comp (idMinus T))
+      < (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T) := by
+  refine lt_of_le_of_ne (theorem1 T hT) ?_
+  intro hEq
+  let Φ : Channel d := idMinus T
+  let LΦ : Channel d := (transposeMap d).comp Φ
+  obtain ⟨ρ, hYmax, hXnonzero⟩ := exists_maximizing_state T hT hΦ
+  let X : Matrix (d × d) (d × d) ℂ := tensorWithIdentity d d Φ ρ.1
+  let Y : Matrix (d × d) (d × d) ℂ := partialTransposeMap d d X
+  have hrewrite : tensorWithIdentity d d LΦ ρ.1 = Y := by
+    simpa [LΦ, Φ, X, Y, LinearMap.comp_apply] using
+      congrArg (fun Ψ : Channel (d × d) => Ψ ρ.1)
+        (tensorWithIdentity_comp_transpose (d := d) (k := d) (Φ := Φ))
+  have hYmax : traceNormOp Y = diamondOp LΦ := by
+    simpa [Y, hrewrite] using hYmax
+  have hTraceX : Matrix.trace X = 0 := by
+    simpa [X, Φ] using
+      tensorWithIdentity_trace_zero (d := d) (k := d)
+        (idMinus T) (idMinus_isTraceAnnihilating T hT) ρ.1
+  have hHermX : Matrix.IsHermitian X := by
+    simpa [X, Φ] using
+      tensorWithIdentity_hermitian (d := d) (k := d)
+        (Ψ := idMinus T) (idMinus_isHermiticityPreserving T hT) ρ.1 ρ.2
+  have hPartialTraceX : partialTraceLeft d d X = 0 := by
+    simpa [X, Φ] using corollary1 T hT ρ.1
+  have hYnonzero : Y ≠ 0 := by
+    exact partialTranspose_ne_zero_of_ne_zero (d := d) (k := d) hXnonzero
+  have hYle :
+      traceNormOp Y ≤ Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp X := by
+    have htmp :
+        traceNormOp Y ≤ Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Y := by
+      simpa [Y] using lemma2 (Y := Y)
+    have hpt : hsNormOp Y = hsNormOp X := by
+      simpa [X, Y] using lemma3 (d := d) (k := d) X
+    simpa [hpt] using htmp
+  have hXle : hsNormOp X ≤ (1 / Real.sqrt 2) * traceNormOp X := by
+    simpa [X] using lemma1 (X := X) hHermX hTraceX
+  have hRle : traceNormOp X ≤ diamondOp Φ := by
+    simpa [X, Φ, diamondOp] using
+      traceNorm_apply_le_diamond (d := d) (k := d) (Φ := Φ) (ρ := ρ)
+  have hYtarget :
+      traceNormOp Y =
+        Real.sqrt (Fintype.card (d × d) : ℝ) * ((1 / Real.sqrt 2) * diamondOp Φ) := by
+    calc
+      traceNormOp Y = diamondOp LΦ := hYmax
+      _ = (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp Φ := by
+        simpa [LΦ, Φ] using hEq
+      _ = Real.sqrt (Fintype.card (d × d) : ℝ) * ((1 / Real.sqrt 2) * diamondOp Φ) := by
+        rw [lemma_transpose_diamond (d := d)]
+        ring
+  have hYeq : traceNormOp Y = Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp X := by
+    apply le_antisymm hYle
+    calc
+      Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp X
+          ≤ Real.sqrt (Fintype.card (d × d) : ℝ) * ((1 / Real.sqrt 2) * diamondOp Φ) := by
+            apply mul_le_mul_of_nonneg_left
+            · exact le_trans hXle (mul_le_mul_of_nonneg_left hRle (by positivity))
+            · exact Real.sqrt_nonneg _
+      _ = traceNormOp Y := by
+        symm
+        exact hYtarget
+  have hsqrt_pos : 0 < Real.sqrt (Fintype.card (d × d) : ℝ) := by
+    positivity
+  have hhs_eq : hsNormOp X = (1 / Real.sqrt 2) * diamondOp Φ := by
+    nlinarith [hYeq, hYtarget, hsqrt_pos]
+  have htrace_ge : diamondOp Φ ≤ traceNormOp X := by
+    have hscaled : (1 / Real.sqrt 2) * diamondOp Φ ≤ (1 / Real.sqrt 2) * traceNormOp X := by
+      simpa [hhs_eq] using hXle
+    have hfac : 0 < (1 / Real.sqrt 2 : ℝ) := by positivity
+    exact le_of_mul_le_mul_left hscaled hfac
+  have htrace_eq : traceNormOp X = diamondOp Φ := by
+    exact le_antisymm hRle htrace_ge
+  have hlemma1eq : hsNormOp X = (1 / Real.sqrt 2) * traceNormOp X := by
+    calc
+      hsNormOp X = (1 / Real.sqrt 2) * diamondOp Φ := hhs_eq
+      _ = (1 / Real.sqrt 2) * traceNormOp X := by rw [htrace_eq]
+  have hlemma2eq :
+      traceNormOp Y = Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp Y := by
+    have hpt : hsNormOp Y = hsNormOp X := by
+      simpa [X, Y] using lemma3 (d := d) (k := d) X
+    simpa [hpt] using hYeq
+  have hrankX : X.rank = 2 :=
+    lemma1_eq_imp_rank_two hHermX hTraceX hXnonzero hlemma1eq
+  have hrankY : Y.rank = Fintype.card (d × d) :=
+    lemma2_eq_imp_full_rank (d := d) (Y := Y) hYnonzero hlemma2eq
+  have hupper : Y.rank ≤ Fintype.card (d × d) - Fintype.card d := by
+    simpa [X, Y] using
+      partialTranspose_rank_upper_bound (d := d) hXnonzero hHermX hTraceX hPartialTraceX hrankX
+  have hd_pos : 0 < Fintype.card d := Fintype.card_pos_iff.mpr inferInstance
+  have hlt : Fintype.card (d × d) - Fintype.card d < Fintype.card (d × d) := by
+    exact Nat.sub_lt (by positivity) hd_pos
+  have : Fintype.card (d × d) < Fintype.card (d × d) := by
+    simpa [hrankY] using lt_of_le_of_lt hupper hlt
+  exact (lt_irrefl _ this).elim
+
+end
+end Diamond
