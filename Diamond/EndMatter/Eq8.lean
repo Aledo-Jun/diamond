@@ -37,7 +37,7 @@ theorem alpha_lower_bound :
   have hchan : IsQuantumChannel (adMap (Fin d) (Ud d)) :=
     adMap_isQuantumChannel (d := Fin d) (U := Ud d) hU
   have htheta : diamondOp (transposeMap (Fin d)) = (d : ℝ) := by
-    rw [lemma_transpose_diamond (d := Fin d)]
+    rw [transpose_diamond_exact (d := Fin d)]
     simp [Fintype.card_prod, Nat.cast_mul]
   have hmain :
       2 * Real.cot (Real.pi / (2 * (d : ℝ))) ≤

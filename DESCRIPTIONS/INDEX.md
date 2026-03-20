@@ -6,7 +6,7 @@ Lean is a programming language and theorem prover. In this repository, it is bei
 
 ## How to Read This Repository
 
-The project follows the same order as the mathematical paper. Start with `Setups.lean`, where the main objects and norms are defined. Then read `StandardFacts.lean`, which collects helper lemmas and background axioms that later proofs use without reproving from scratch. The folder `Theorem/*` contains the central proof flow: three preparatory lemmas, the main theorem, and a generalizing remark. The folder `PositiveGap/*` continues the story by showing that the main bound is strict in finite dimension. Finally, `EndMatter/*` contains the lower-bound constructions and the coding-theoretic consequence at the end of the paper. Every linked page below gives a beginner-facing, line-by-line guide to one declaration, so you can move back and forth between the formal code and the mathematical meaning.
+The project follows the same order as the mathematical paper. Start with `Setups.lean`, where the main objects and norms are defined. Then read `StandardFacts.lean`, which collects helper lemmas, a few internalized background steps, and the remaining background axioms that later proofs use. The folder `Theorem/*` contains the central proof flow: three preparatory lemmas, the main theorem, and a generalizing remark. The folder `PositiveGap/*` continues the story by showing that the main bound is strict in finite dimension. Finally, `EndMatter/*` contains the lower-bound constructions and the coding-theoretic consequence at the end of the paper. Every linked page below gives a beginner-facing, line-by-line guide to one declaration, so you can move back and forth between the formal code and the mathematical meaning.
 
 ```mermaid
 flowchart LR
@@ -94,7 +94,7 @@ This file contains foundational objects and notational definitions for operators
 <a id="diamond-standardfacts-lean"></a>
 ### `StandardFacts.lean`
 
-This file contains helper facts and background axioms that the paper treats as standard or external input.
+This file contains helper facts, some now-proved background reductions, and the remaining background axioms.
 - [`trNorm_nonneg`](StandardFacts/trNorm_nonneg.md)
 - [`hsNorm_nonneg`](StandardFacts/hsNorm_nonneg.md)
 - [`hsNormOp_eq_zero_iff`](StandardFacts/hsNormOp_eq_zero_iff.md)
@@ -104,6 +104,7 @@ This file contains helper facts and background axioms that the paper treats as s
 - [`idMinus_isTraceAnnihilating`](StandardFacts/idMinus_isTraceAnnihilating.md)
 - [`adMap_isQuantumChannel`](StandardFacts/adMap_isQuantumChannel.md)
 - [`diamond_le_of_pointwise`](StandardFacts/diamond_le_of_pointwise.md)
+- [`diamond_le_of_pointwise_nonempty`](StandardFacts/diamond_le_of_pointwise_nonempty.md)
 - [`traceNorm_apply_le_diamond`](StandardFacts/traceNorm_apply_le_diamond.md)
 - [`lemma_transpose_diamond`](StandardFacts/lemma_transpose_diamond.md)
 - [`unitary_channel_diamond_distance_eq_two_of_trace_zero`](StandardFacts/unitary_channel_diamond_distance_eq_two_of_trace_zero.md)

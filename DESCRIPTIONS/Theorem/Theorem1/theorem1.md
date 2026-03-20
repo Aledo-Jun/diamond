@@ -22,7 +22,7 @@ theorem theorem1
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T) := by
   change diamondNormAt (d := d) (k := d) ((transposeMap d).comp (idMinus T)) ≤
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)
-  refine diamond_le_of_pointwise (d := d) (Φ := (transposeMap d).comp (idMinus T))
+  refine diamond_le_of_pointwise_nonempty (d := d) (Φ := (transposeMap d).comp (idMinus T))
     ((1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)) ?_
   intro ρ
   let Mρ : Matrix (d × d) (d × d) ℂ := tensorWithIdentity d d (idMinus T) ρ.1
@@ -126,7 +126,7 @@ This line is one local step in the declaration. It either refines the formula be
 
 8. Code:
 ```lean
-  refine diamond_le_of_pointwise (d := d) (Φ := (transposeMap d).comp (idMinus T))
+  refine diamond_le_of_pointwise_nonempty (d := d) (Φ := (transposeMap d).comp (idMinus T))
 ```
 This line is a more controlled version of `apply`. It sets up the proof with a partly specified argument and leaves smaller goals to solve next.  `comp` means composition of maps: one map is applied after another.
 
@@ -474,7 +474,7 @@ Restated without Lean syntax, `theorem1` is the theorem or lemma written above.
 - [`tensorWithIdentity_comp_transpose`](../../StandardFacts/tensorWithIdentity_comp_transpose.md) from `StandardFacts.lean`
 - [`idMinus_isHermiticityPreserving`](../../StandardFacts/idMinus_isHermiticityPreserving.md) from `StandardFacts.lean`
 - [`idMinus_isTraceAnnihilating`](../../StandardFacts/idMinus_isTraceAnnihilating.md) from `StandardFacts.lean`
-- [`diamond_le_of_pointwise`](../../StandardFacts/diamond_le_of_pointwise.md) from `StandardFacts.lean`
+- [`diamond_le_of_pointwise_nonempty`](../../StandardFacts/diamond_le_of_pointwise_nonempty.md) from `StandardFacts.lean`
 - [`traceNorm_apply_le_diamond`](../../StandardFacts/traceNorm_apply_le_diamond.md) from `StandardFacts.lean`
 - [`lemma_transpose_diamond`](../../StandardFacts/lemma_transpose_diamond.md) from `StandardFacts.lean`
 - [`tensorWithIdentity_trace_zero`](../../StandardFacts/tensorWithIdentity_trace_zero.md) from `StandardFacts.lean`

@@ -84,7 +84,7 @@ theorem corollary2_linear_bound
           (1 / Real.sqrt 2) * diamondOp (transposeMap msg) * diamondOp (idMinus effective) :=
         hrem
       _ = (1 / Real.sqrt 2) * Real.sqrt (Fintype.card (msg × msg) : ℝ) * (2 * ε) := by
-        rw [lemma_transpose_diamond (d := msg), herror_eq]
+        rw [transpose_diamond_exact (d := msg), herror_eq]
       _ = (1 / Real.sqrt 2) * (Fintype.card msg : ℝ) * (2 * ε) := by
         rw [hsqrt_msg]
       _ = Real.sqrt 2 * (Fintype.card msg : ℝ) * ε := by
@@ -107,7 +107,7 @@ theorem corollary2_linear_bound
             rw [Real.sqrt_sq_eq_abs]
             have hnn : 0 ≤ (Fintype.card msg : ℝ) := by positivity
             simp [abs_of_nonneg hnn]
-  rw [lemma_transpose_diamond (d := msg)] at htranspose_triangle
+  rw [transpose_diamond_exact (d := msg)] at htranspose_triangle
   rw [hsqrt_msg] at htranspose_triangle
   have hlinear :
       (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤

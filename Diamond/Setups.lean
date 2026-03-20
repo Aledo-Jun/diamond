@@ -62,6 +62,10 @@ structure IsQuantumChannel
     {d : Type u} [Fintype d] [DecidableEq d] (T : Channel d) where
   trace_preserving : ∀ X, Matrix.trace (T X) = Matrix.trace X
   hermiticity_preserving : IsHermiticityPreserving T
+  kraus :
+    ∃ (r : ℕ), ∃ (E : Fin r → Matrix d d ℂ),
+      (∀ X, T X = ∑ i, E i * X * (E i)ᴴ) ∧
+      (∑ i, (E i)ᴴ * E i = 1)
 
 def IsTraceAnnihilating
     {d : Type u} [Fintype d] [DecidableEq d] (Φ : Channel d) : Prop :=

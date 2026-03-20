@@ -153,18 +153,20 @@ per important declaration with line-by-line explanations.
 
 ## Notes On Background Axioms
 
-The repo is not completely axiom-free. A small number of results are imported as background facts in
+The repo is not completely axiom-free. A reduced set of results is still imported as background facts in
 [`Diamond/StandardFacts.lean`](Diamond/StandardFacts.lean), such as:
 
 - Kraus representation for finite-dimensional quantum channels
-- pointwise-to-diamond reduction / witness bounds
+- the abstract edge-case pointwise-to-diamond reduction / witness bounds
 - the known value of the transpose map diamond norm
-- the unitary-channel distance formula used in Eq. (8)
 - finite-dimensional maximizer existence
 - an asymptotic cotangent lower bound
 
-These are isolated in one place so the paper’s own numbered lemmas and main theorem remain visible
-in the Lean proof flow.
+The nonempty supremum step used by Theorem 1 and Remark 1 is now proved internally, and the
+roots-of-unity identity `trace_Ud_eq_zero`, the simultaneous unitary diagonalization theorem, and the
+unitary-channel distance formula used in Eq. (8) are also proved internally. The remaining assumptions
+are isolated in one place so the paper’s own numbered lemmas and main theorem remain visible in the
+Lean proof flow.
 
 ## Documentation Status
 

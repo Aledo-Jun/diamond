@@ -3,6 +3,7 @@ import Diamond.StandardFacts
 import Diamond.Theorem.Lemma1
 import Diamond.Theorem.Lemma2
 import Diamond.Theorem.Lemma3
+import Diamond.Theorem.TransposeDiamond
 
 open scoped BigOperators
 open scoped ComplexOrder
@@ -23,7 +24,7 @@ theorem theorem1
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T) := by
   change diamondNormAt (d := d) (k := d) ((transposeMap d).comp (idMinus T)) ≤
       (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)
-  refine diamond_le_of_pointwise (d := d) (Φ := (transposeMap d).comp (idMinus T))
+  refine diamond_le_of_pointwise_nonempty (d := d) (Φ := (transposeMap d).comp (idMinus T))
     ((1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp (idMinus T)) ?_
   intro ρ
   let Mρ : Matrix (d × d) (d × d) ℂ := tensorWithIdentity d d (idMinus T) ρ.1
@@ -69,7 +70,7 @@ theorem theorem1
     exact le_trans hlemma2 (mul_le_mul_of_nonneg_left hhs (Real.sqrt_nonneg _))
   have hsqrt : Real.sqrt (Fintype.card (d × d) : ℝ) = diamondOp (transposeMap d) := by
     symm
-    exact lemma_transpose_diamond (d := d)
+    exact transpose_diamond_exact (d := d)
   calc
     traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ.1) ≤
         Real.sqrt (Fintype.card (d × d) : ℝ) *

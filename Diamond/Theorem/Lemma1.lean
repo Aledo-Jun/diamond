@@ -299,7 +299,7 @@ theorem lemma1
       rw [traceNormOp_hermitian_eq_sum_abs_eigenvalues hHerm]
 
 /-- Positive semidefinite matrices have trace norm equal to the real trace. -/
-private theorem traceNormOp_posSemidef_eq_trace
+theorem traceNormOp_posSemidef_eq_trace
     {d : Type u} [Fintype d] [DecidableEq d]
     {A : Matrix d d ℂ} (hA : A.PosSemidef) :
     traceNormOp A = Complex.re (Matrix.trace A) := by
@@ -323,7 +323,7 @@ private theorem traceNormOp_density_eq_one
   simp
 
 /-- The concrete trace distance between density states is at most `2`. -/
-private theorem traceNormOp_sub_density_le_two
+theorem traceNormOp_sub_density_le_two
     {d : Type u} [Fintype d] [DecidableEq d]
     {ρ σ : Matrix d d ℂ} (hρ : IsDensityState ρ) (hσ : IsDensityState σ) :
     traceNormOp (ρ - σ) ≤ 2 := by
@@ -395,7 +395,7 @@ private theorem traceNormOp_sub_density_le_two
       norm_num
 
 /-- The concrete trace norm depends only on `Xᴴ * X`. -/
-private theorem traceNormOp_eq_of_conjTranspose_mul_self_eq
+theorem traceNormOp_eq_of_conjTranspose_mul_self_eq
     {d : Type u} [Fintype d] [DecidableEq d]
     {A B : Matrix d d ℂ} (hAB : Aᴴ * A = Bᴴ * B) :
     traceNormOp A = traceNormOp B := by

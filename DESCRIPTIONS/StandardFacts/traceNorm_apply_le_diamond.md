@@ -99,5 +99,5 @@ Restated without Lean syntax, `traceNorm_apply_le_diamond` is the theorem or lem
 
 - [Back to `INDEX.md`](../INDEX.md)
 - [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](diamond_le_of_pointwise.md)
+- [Previous declaration in this file](diamond_le_of_pointwise_nonempty.md)
 - [Next declaration in this file](lemma_transpose_diamond.md)

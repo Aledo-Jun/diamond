@@ -4,6 +4,7 @@ import Diamond.StandardFacts
 import Diamond.Theorem.Lemma1
 import Diamond.Theorem.Lemma2
 import Diamond.Theorem.Lemma3
+import Diamond.Theorem.TransposeDiamond
 import Diamond.Theorem.Theorem1
 import Diamond.Theorem.Remark1
 

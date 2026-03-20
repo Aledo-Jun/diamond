@@ -4,52 +4,57 @@
 
 - Original Lean file: `Diamond/StandardFacts.lean`
 - Declaration name: `trace_Ud_eq_zero`
-- Declaration kind: `axiom`
+- Declaration kind: `theorem`
 
 ## Why this declaration exists
 
-Background roots-of-unity trace identity for the phase unitary `U_d`.
+This theorem proves the roots-of-unity trace identity for the phase unitary `U_d`. It is the Lean
+formalization of the sentence in the end matter of `docs/diamond.md` saying that the diagonal phases
+sum to zero.
 
- In the file `StandardFacts.lean`, it contributes to helper facts and background axioms that the paper treats as standard or external input. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
-
-## Original code
+## Current code
 
 ```lean
-/-- Background roots-of-unity trace identity for the phase unitary `U_d`. -/
-axiom trace_Ud_eq_zero (d : ℕ) [Fact (1 < d)] :
-    Matrix.trace (Ud d) = 0
+/-- The phase-unitary trace vanishes because it is the full sum of the nontrivial `d`th
+roots of unity. This mirrors the end-matter proof in `diamond/docs/diamond.md`: rewrite
+the trace as a geometric sum and apply the primitive-root vanishing identity. -/
+theorem trace_Ud_eq_zero (d : ℕ) [Fact (1 < d)] :
+    Matrix.trace (Ud d) = 0 := by
+  have hd_ne_zero : d ≠ 0 := Nat.ne_of_gt (lt_trans Nat.zero_lt_one ‹Fact (1 < d)›.out)
+  let ζ : ℂ := Complex.exp ((2 * Real.pi * Complex.I) / (d : ℂ))
+  have hprim : IsPrimitiveRoot ζ d := by
+    simpa [ζ] using Complex.isPrimitiveRoot_exp d hd_ne_zero
+  have hpow :
+      ∀ i : Fin d,
+        Complex.exp ((2 * Real.pi * Complex.I * (i : ℂ)) / (d : ℂ)) = ζ ^ (i : ℕ) := by
+    intro i
+    calc
+      Complex.exp ((2 * Real.pi * Complex.I * (i : ℂ)) / (d : ℂ))
+        = Complex.exp (((i : ℕ) : ℂ) * ((2 * Real.pi * Complex.I) / (d : ℂ))) := by
+            ring_nf
+      _ = ζ ^ (i : ℕ) := by
+            rw [Complex.exp_nat_mul]
+  have htrace :
+      Matrix.trace (Ud d) = ∑ i : Fin d, ζ ^ (i : ℕ) := by
+    simp [Ud, Matrix.trace_diagonal, hpow]
+  have hsum :
+      (∑ i : Fin d, ζ ^ (i : ℕ)) = Finset.sum (Finset.range d) (fun i : ℕ => ζ ^ i) := by
+    simpa using (Fin.sum_univ_eq_sum_range (fun i : ℕ => ζ ^ i) d)
+  calc
+    Matrix.trace (Ud d) = ∑ i : Fin d, ζ ^ (i : ℕ) := htrace
+    _ = Finset.sum (Finset.range d) (fun i : ℕ => ζ ^ i) := hsum
+    _ = 0 := by
+          simpa using hprim.geom_sum_eq_zero ‹Fact (1 < d)›.out
 ```
-
-## Line-by-line explanation
-
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
-
-1. Code:
-```lean
-/-- Background roots-of-unity trace identity for the phase unitary `U_d`. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
-
-2. Code:
-```lean
-axiom trace_Ud_eq_zero (d : ℕ) [Fact (1 < d)] :
-```
-This line starts the `trace_Ud_eq_zero` declaration. Because it begins with `axiom`, Lean now knows what kind of named object is being introduced.
-
-3. Code:
-```lean
-    Matrix.trace (Ud d) = 0
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
 
 ## Mathematical summary
 
-Restated without Lean syntax, `trace_Ud_eq_zero` is the theorem or lemma written above.
+The proof has exactly the same structure as the paper:
 
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
+1. Define the primitive root of unity `ζ = exp(2π i / d)`.
+2. Rewrite each diagonal entry of `Ud d` as `ζ^i`.
+3. Rewrite the trace as the full geometric sum `∑_{i=0}^{d-1} ζ^i`.
+4. Apply the standard primitive-root identity saying that this sum is zero for `d > 1`.
 
 ## Dependencies and downstream use
 

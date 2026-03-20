@@ -876,7 +876,7 @@ theorem theorem_not_tight
       _ = (1 / Real.sqrt 2) * diamondOp (transposeMap d) * diamondOp Φ := by
         simpa [LΦ, Φ] using hEq
       _ = Real.sqrt (Fintype.card (d × d) : ℝ) * ((1 / Real.sqrt 2) * diamondOp Φ) := by
-        rw [lemma_transpose_diamond (d := d)]
+        rw [transpose_diamond_exact (d := d)]
         ring
   have hYeq : traceNormOp Y = Real.sqrt (Fintype.card (d × d) : ℝ) * hsNormOp X := by
     apply le_antisymm hYle
