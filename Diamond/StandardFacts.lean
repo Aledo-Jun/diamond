@@ -134,11 +134,182 @@ theorem diamond_le_of_pointwise_nonempty
 /-- Concrete witness bound for the diamond norm defined in `Setups`. -/
 -- Immediate from the definition of `diamondNormAt`; kept as an explicit axiom in this split
 -- to avoid introducing an auxiliary compactness/attainment argument at this layer.
-axiom traceNorm_apply_le_diamond
+theorem traceNorm_apply_le_diamond
     {d : Type u} [Fintype d] [DecidableEq d] {k : Type u}
     [Fintype k] [DecidableEq k]
     (Φ : Channel d) (ρ : DensityState (d × k)) :
-    traceNormOp (tensorWithIdentity d k Φ ρ.1) ≤ diamondNormAt (d := d) (k := k) Φ
+    traceNormOp (tensorWithIdentity d k Φ ρ.1) ≤ diamondNormAt (d := d) (k := k) Φ := by
+  let Ψ : Channel (d × k) := tensorWithIdentity d k Φ
+  let B : (d × k) × (d × k) → ℝ := fun p =>
+    hsNormOp (Ψ (Matrix.single p.1 p.2 (1 : ℂ)))
+  have hρhs : hsNormOp ρ.1 ≤ 1 := by
+    rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ.2.1 with ⟨M, hM⟩
+    have hsum : ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) = 1 := by
+      have htrace : Matrix.trace (Mᴴ * M) = 1 := by
+        simpa [hM] using ρ.2.2
+      have hre := congrArg Complex.re htrace
+      have haux :
+          Complex.re (Matrix.trace (Mᴴ * M)) =
+            ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) := by
+        calc
+          Complex.re (Matrix.trace (Mᴴ * M)) = ∑ i, Complex.re ((Mᴴ * M) i i) := by
+            simp [Matrix.trace]
+          _ = ∑ i, ∑ j, ‖M j i‖ ^ (2 : ℝ) := by
+                simp [Matrix.mul_apply, Matrix.conjTranspose_apply, RCLike.norm_sq_eq_def]
+          _ = ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) := by
+                rw [Finset.sum_comm]
+      simpa [haux] using hre
+    have hMnorm : hsNormOp M = 1 := by
+      change ‖M‖ = 1
+      rw [Matrix.frobenius_norm_def, hsum]
+      norm_num
+    have hMstar : hsNormOp Mᴴ = hsNormOp M := by
+      change ‖Mᴴ‖ = ‖M‖
+      simpa using Matrix.frobenius_norm_conjTranspose M
+    calc
+      hsNormOp ρ.1 = hsNormOp (Mᴴ * M) := by
+        simpa [hM]
+      _ ≤ hsNormOp Mᴴ * hsNormOp M := by
+        change ‖Mᴴ * M‖ ≤ ‖Mᴴ‖ * ‖M‖
+        exact Matrix.frobenius_norm_mul _ _
+      _ = hsNormOp M * hsNormOp M := by
+        rw [hMstar]
+      _ = 1 := by
+        rw [hMnorm]
+        ring
+  have hdecomp (A : Matrix (d × k) (d × k) ℂ) :
+      A = ∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ) := by
+    simpa [Matrix.smul_single] using Matrix.matrix_eq_sum_single A
+  have hhs (A : Matrix (d × k) (d × k) ℂ) :
+      hsNormOp (Ψ A) ≤
+        hsNormOp A * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := by
+    let coeff : (d × k) × (d × k) → ℝ := fun p => ‖A p.1 p.2‖
+    have hsingleSum :
+        (∑ i : d × k, ∑ j : d × k, Matrix.single i j (A i j)) =
+          ∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ) := by
+      refine Finset.sum_congr rfl ?_
+      intro i hi
+      refine Finset.sum_congr rfl ?_
+      intro j hj
+      simp [Matrix.smul_single]
+    have hrew :
+        hsNormOp (Ψ A) =
+          hsNormOp (Ψ (∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ))) := by
+      calc
+        hsNormOp (Ψ A) =
+            hsNormOp (Ψ (∑ i : d × k, ∑ j : d × k, Matrix.single i j (A i j))) := by
+              exact congrArg (fun M => hsNormOp (Ψ M)) (Matrix.matrix_eq_sum_single A)
+        _ = hsNormOp (Ψ (∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ))) := by
+              rw [hsingleSum]
+    have hsum :
+        hsNormOp (Ψ A) ≤
+          ∑ p : (d × k) × (d × k), coeff p * B p := by
+      have hmap :
+          Ψ (∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ)) =
+            ∑ i : d × k, ∑ j : d × k, A i j • Ψ (Matrix.single i j (1 : ℂ)) := by
+              rw [map_sum]
+              refine Finset.sum_congr rfl ?_
+              intro i hi
+              rw [map_sum]
+              refine Finset.sum_congr rfl ?_
+              intro j hj
+              rw [map_smul]
+      calc
+        hsNormOp (Ψ A) =
+            hsNormOp (Ψ (∑ i : d × k, ∑ j : d × k, A i j • Matrix.single i j (1 : ℂ))) := hrew
+        _
+          = ‖∑ i : d × k, ∑ j : d × k, A i j • Ψ (Matrix.single i j (1 : ℂ))‖ := by
+              rw [hsNormOp, hsNorm, hmap]
+        _ ≤ ∑ i : d × k, ‖∑ j : d × k, A i j • Ψ (Matrix.single i j (1 : ℂ))‖ := by
+              exact norm_sum_le _ _
+        _ ≤ ∑ i : d × k, ∑ j : d × k, ‖A i j • Ψ (Matrix.single i j (1 : ℂ))‖ := by
+              refine Finset.sum_le_sum ?_
+              intro i hi
+              exact norm_sum_le _ _
+        _ = ∑ i : d × k, ∑ j : d × k, ‖A i j‖ * hsNormOp (Ψ (Matrix.single i j (1 : ℂ))) := by
+              simp [hsNormOp, hsNorm, norm_smul]
+        _ = ∑ p : (d × k) × (d × k), coeff p * B p := by
+              simp [coeff, B, Fintype.sum_prod_type]
+    have hcs :
+        ∑ p : (d × k) × (d × k), coeff p * B p ≤
+          Real.sqrt (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) *
+            Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := by
+      simpa using Real.sum_mul_le_sqrt_mul_sqrt (Finset.univ : Finset ((d × k) × (d × k))) coeff B
+    have hcoeff :
+        Real.sqrt (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) = hsNormOp A := by
+      have hnonneg :
+          0 ≤ ∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ) := by
+            positivity
+      calc
+        Real.sqrt (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ))
+          = (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) ^ (1 / 2 : ℝ) := by
+              rw [Real.sqrt_eq_rpow]
+        _ = hsNormOp A := by
+              simpa [coeff, hsNormOp, hsNorm, Matrix.frobenius_norm_def, Fintype.sum_prod_type]
+    calc
+      hsNormOp (Ψ A) ≤ ∑ p : (d × k) × (d × k), coeff p * B p := hsum
+      _ ≤ Real.sqrt (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) *
+            Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := hcs
+      _ = hsNormOp A * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := by
+            rw [hcoeff]
+  let C : ℝ := Real.sqrt (Fintype.card (d × k) : ℝ) *
+      Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ))
+  have hbound :
+      BddAbove {r : ℝ | ∃ ρ' : DensityState (d × k), r = traceNormOp (Ψ ρ'.1)} := by
+    refine ⟨C, ?_⟩
+    intro r hr
+    rcases hr with ⟨ρ', rfl⟩
+    have hlemma2 :
+        traceNormOp (Ψ ρ'.1) ≤
+          Real.sqrt (Fintype.card (d × k) : ℝ) * hsNormOp (Ψ ρ'.1) := by
+      simpa [Ψ] using lemma2 (Y := Ψ ρ'.1)
+    have hhsρ : hsNormOp (Ψ ρ'.1) ≤
+        hsNormOp ρ'.1 * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := hhs ρ'.1
+    have hρ'hs : hsNormOp ρ'.1 ≤ 1 := by
+      rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ'.2.1 with ⟨M, hM⟩
+      have hsum : ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) = 1 := by
+        have htrace : Matrix.trace (Mᴴ * M) = 1 := by
+          simpa [hM] using ρ'.2.2
+        have hre := congrArg Complex.re htrace
+        have haux :
+            Complex.re (Matrix.trace (Mᴴ * M)) =
+              ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) := by
+          calc
+            Complex.re (Matrix.trace (Mᴴ * M)) = ∑ i, Complex.re ((Mᴴ * M) i i) := by
+              simp [Matrix.trace]
+            _ = ∑ i, ∑ j, ‖M j i‖ ^ (2 : ℝ) := by
+                  simp [Matrix.mul_apply, Matrix.conjTranspose_apply, RCLike.norm_sq_eq_def]
+            _ = ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) := by
+                  rw [Finset.sum_comm]
+        simpa [haux] using hre
+      have hMnorm : hsNormOp M = 1 := by
+        change ‖M‖ = 1
+        rw [Matrix.frobenius_norm_def, hsum]
+        norm_num
+      have hMstar : hsNormOp Mᴴ = hsNormOp M := by
+        change ‖Mᴴ‖ = ‖M‖
+        simpa using Matrix.frobenius_norm_conjTranspose M
+      calc
+        hsNormOp ρ'.1 = hsNormOp (Mᴴ * M) := by simpa [hM]
+        _ ≤ hsNormOp Mᴴ * hsNormOp M := by
+              change ‖Mᴴ * M‖ ≤ ‖Mᴴ‖ * ‖M‖
+              exact Matrix.frobenius_norm_mul _ _
+        _ = hsNormOp M * hsNormOp M := by rw [hMstar]
+        _ = 1 := by rw [hMnorm]; ring
+    calc
+      traceNormOp (Ψ ρ'.1) ≤ Real.sqrt (Fintype.card (d × k) : ℝ) * hsNormOp (Ψ ρ'.1) := hlemma2
+      _ ≤ Real.sqrt (Fintype.card (d × k) : ℝ) *
+            (hsNormOp ρ'.1 * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ))) := by
+              exact mul_le_mul_of_nonneg_left hhsρ (Real.sqrt_nonneg _)
+      _ ≤ Real.sqrt (Fintype.card (d × k) : ℝ) *
+            (1 * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ))) := by
+              exact mul_le_mul_of_nonneg_left
+                (mul_le_mul_of_nonneg_right hρ'hs (Real.sqrt_nonneg _))
+                (Real.sqrt_nonneg _)
+      _ = C := by
+            simp [C]
+  unfold diamondNormAt
+  exact le_csSup hbound ⟨ρ, rfl⟩
 
 /-- Tensoring unitary conjugation with the identity is conjugation by the Kronecker unitary. -/
 private theorem tensorWithIdentity_adMap_eq_kronecker
@@ -278,6 +449,42 @@ private theorem densityState_hsNorm_le_one
     _ = 1 := by
       rw [hBnorm]
       ring
+
+private theorem isClosed_isHermitian_set
+    {n : Type u} [Fintype n] [DecidableEq n] :
+    IsClosed {M : Matrix n n ℂ | Matrix.IsHermitian M} := by
+  have hct : Continuous fun ρ : Matrix n n ℂ => ρᴴ := by
+    fun_prop
+  simpa [Matrix.IsHermitian, Set.setOf_eq_eq_singleton] using isClosed_eq hct continuous_id
+
+private theorem continuous_dotProduct_mulVec
+    {n : Type u} [Fintype n] [DecidableEq n] (x : n → ℂ) :
+    Continuous fun M : Matrix n n ℂ => star x ⬝ᵥ (M *ᵥ x) := by
+  classical
+  letI : NormedSpace ℂ (Matrix n n ℂ) := Matrix.frobeniusNormedSpace
+  let f : Matrix n n ℂ →ₗ[ℂ] ℂ :=
+    { toFun := fun M => star x ⬝ᵥ (M *ᵥ x)
+      map_add' := by intro A B; simp [Matrix.add_mulVec, dotProduct_add]
+      map_smul' := by intro c A; simp [Matrix.smul_mulVec, dotProduct_smul] }
+  simpa using f.continuous_of_finiteDimensional
+
+private theorem isClosed_posSemidef_set
+    {n : Type u} [Fintype n] [DecidableEq n] :
+    IsClosed {M : Matrix n n ℂ | M.PosSemidef} := by
+  suffices
+      IsClosed {M : Matrix n n ℂ | M.IsHermitian ∧ ∀ x : n → ℂ, 0 ≤ star x ⬝ᵥ (M *ᵥ x)} by
+    simpa [Matrix.posSemidef_iff_dotProduct_mulVec] using this
+  refine isClosed_isHermitian_set.inter ?_
+  have hquad :
+      IsClosed {M : Matrix n n ℂ | ∀ x : n → ℂ, 0 ≤ star x ⬝ᵥ (M *ᵥ x)} := by
+    simpa [Set.setOf_forall] using
+      (isClosed_iInter
+        (f := fun x : n → ℂ => {M : Matrix n n ℂ | 0 ≤ star x ⬝ᵥ (M *ᵥ x)})
+        fun x => by
+          simpa [Set.preimage, Set.setOf_mem_eq] using
+            (isClosed_Ici.preimage (continuous_dotProduct_mulVec x) :
+              IsClosed ((fun M : Matrix n n ℂ => star x ⬝ᵥ (M *ᵥ x)) ⁻¹' Set.Ici (0 : ℂ))))
+  exact hquad
 
 private theorem phiStateGen_trace
     (d : Type u) [Fintype d] [DecidableEq d] [Nonempty d] :
@@ -734,7 +941,7 @@ axiom exists_maximizing_state
       tensorWithIdentity d d (idMinus T) ρ.1 ≠ 0
 
 /-- Background spectral form of a nonzero rank-two traceless Hermitian matrix. -/
-axiom rank_two_traceless_hermitian_decomposition
+theorem rank_two_traceless_hermitian_decomposition
     {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
     {X : Matrix (d × d) (d × d) ℂ} :
     X ≠ 0 →
@@ -743,17 +950,331 @@ axiom rank_two_traceless_hermitian_decomposition
     X.rank = 2 →
     ∃ c : ℂ, ∃ ψ φ : d × d → ℂ,
       c ≠ 0 ∧
-      X = c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ))
+      X = c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ)) := by
+  intro hX0 hXh htr hr
+  let _ := hX0
+  let eig : d × d → ℝ := hXh.eigenvalues
+  let S := {i : d × d // eig i ≠ 0}
+  have hcardS : Fintype.card S = 2 := by
+    have hrank : X.rank = Fintype.card S := by
+      simpa [S, eig] using hXh.rank_eq_card_non_zero_eigs (A := X)
+    exact hrank ▸ hr
+  have hnat : Nat.card S = 2 := by
+    rw [← Fintype.card_eq_nat_card]
+    exact hcardS
+  obtain ⟨iS, jS, hijS, hS_univ⟩ := Nat.card_eq_two_iff.mp hnat
+  have hij : iS.1 ≠ jS.1 := by
+    intro h
+    exact hijS (Subtype.ext h)
+  have hsupp : ∀ k : d × d, eig k ≠ 0 → k = iS.1 ∨ k = jS.1 := by
+    intro k hk
+    have hkS : (⟨k, hk⟩ : S) = iS ∨ (⟨k, hk⟩ : S) = jS := by
+      have : (⟨k, hk⟩ : S) ∈ ({iS, jS} : Set S) := by
+        rw [hS_univ]
+        simp
+      simpa [Set.mem_insert_iff, Set.mem_singleton_iff] using this
+    exact hkS.elim (fun h => Or.inl (congrArg Subtype.val h)) (fun h => Or.inr (congrArg Subtype.val h))
+  have hsum_zero : ∑ k, eig k = 0 := by
+    have htraceC : (∑ k, ((eig k : ℝ) : ℂ)) = 0 := by
+      simpa [eig, hXh.trace_eq_sum_eigenvalues] using htr
+    exact_mod_cast congrArg Complex.re htraceC
+  have hsum_pair : ∑ k, eig k = eig iS.1 + eig jS.1 := by
+    classical
+    rw [Finset.sum_eq_add iS.1 jS.1 hij]
+    · intro k hk hkij
+      have hk0 : eig k = 0 := by
+        by_cases hke : eig k = 0
+        · exact hke
+        · rcases hsupp k hke with hki | hkj
+          · exact (hkij.1 hki).elim
+          · exact (hkij.2 hkj).elim
+      simp [hk0]
+    · intro hi_not
+      simp at hi_not
+    · intro hj_not
+      simp at hj_not
+  have hpair : eig iS.1 + eig jS.1 = 0 := by
+    simpa [hsum_pair] using hsum_zero
+  have hj_eq : eig jS.1 = - eig iS.1 := by
+    linarith
+  let ψ : d × d → ℂ := ⇑(hXh.eigenvectorBasis iS.1)
+  let φ : d × d → ℂ := ⇑(hXh.eigenvectorBasis jS.1)
+  let c : ℂ := eig iS.1
+  have hc : c ≠ 0 := by
+    simpa [c, eig] using iS.2
+  have hsingle (idx : d × d) :
+      (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single idx idx (1 : ℂ) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)
+        = Matrix.vecMulVec (⇑(hXh.eigenvectorBasis idx)) (star ⇑(hXh.eigenvectorBasis idx)) := by
+    calc
+      (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single idx idx (1 : ℂ) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)
+        = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+            Matrix.vecMulVec (Pi.single idx 1) (Pi.single idx 1) *
+            (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+              rw [Matrix.single_eq_single_vecMulVec_single]
+      _ = Matrix.vecMulVec ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *ᵥ Pi.single idx 1)
+            (Pi.single idx 1) * (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+              rw [Matrix.mul_vecMulVec]
+      _ = Matrix.vecMulVec ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *ᵥ Pi.single idx 1)
+            ((Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+              rw [Matrix.vecMulVec_mul]
+      _ = Matrix.vecMulVec (⇑(hXh.eigenvectorBasis idx))
+            ((Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+              rw [hXh.eigenvectorUnitary_mulVec]
+      _ = Matrix.vecMulVec (⇑(hXh.eigenvectorBasis idx)) (star ⇑(hXh.eigenvectorBasis idx)) := by
+              rw [show (Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
+                    star ⇑(hXh.eigenvectorBasis idx) by
+                    ext b
+                    simp [Matrix.single_one_vecMul, Matrix.conjTranspose_apply,
+                      hXh.eigenvectorUnitary_apply]]
+  have hi_single := hsingle iS.1
+  have hj_single := hsingle jS.1
+  have hD :
+      Matrix.diagonal (fun k => ((eig k : ℝ) : ℂ)) =
+        c • Matrix.single iS.1 iS.1 (1 : ℂ) + (-c) • Matrix.single jS.1 jS.1 (1 : ℂ) := by
+    ext a b
+    by_cases hab : a = b
+    · subst b
+      by_cases hai : a = iS.1
+      · subst a
+        have hji : jS.1 ≠ iS.1 := by
+          exact fun h => hij h.symm
+        have hnot : ¬ jS.1 = iS.1 := hji
+        simp [c, eig, Matrix.single_apply, hnot]
+      · by_cases haj : a = jS.1
+        · subst a
+          simp [c, eig, hj_eq, Matrix.single_apply, hij]
+        · have hai' : iS.1 ≠ a := fun h => hai h.symm
+          have haj' : jS.1 ≠ a := fun h => haj h.symm
+          have ha0 : eig a = 0 := by
+            by_cases hne : eig a = 0
+            · exact hne
+            · exfalso
+              rcases hsupp a hne with h | h
+              · exact hai h
+              · exact haj h
+          simp [Matrix.diagonal_apply, Matrix.single_apply, hai', haj', c, ha0]
+    · have hia : ¬ (iS.1 = a ∧ iS.1 = b) := by
+        intro h
+        exact hab (h.1.symm.trans h.2)
+      have hja : ¬ (jS.1 = a ∧ jS.1 = b) := by
+        intro h
+        exact hab (h.1.symm.trans h.2)
+      simp [Matrix.diagonal_apply, Matrix.single_apply, hab, hia, hja]
+  refine ⟨c, ψ, φ, hc, ?_⟩
+  calc
+    X = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+          Matrix.diagonal (fun k => ((eig k : ℝ) : ℂ)) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+            simpa [eig, Unitary.conjStarAlgAut_apply] using hXh.spectral_theorem
+    _ = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+          (c • Matrix.single iS.1 iS.1 (1 : ℂ) + (-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+            rw [hD]
+    _ = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) +
+        (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+            simp [Matrix.mul_add, add_mul, Matrix.mul_assoc]
+    _ = c • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single iS.1 iS.1 (1 : ℂ) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) +
+        (-c) • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single jS.1 jS.1 (1 : ℂ) *
+          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+            have h1 :
+                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
+                    (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
+                  c • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                    Matrix.single iS.1 iS.1 (1 : ℂ) *
+                    (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+                      change ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                        (c • Matrix.single iS.1 iS.1 (1 : ℂ))) *
+                        (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) = _
+                      rw [Matrix.mul_smul, Matrix.mul_assoc, Matrix.smul_mul]
+                      simp [Matrix.mul_assoc]
+            have h2 :
+                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
+                    (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
+                  (-c) • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                    Matrix.single jS.1 jS.1 (1 : ℂ) *
+                    (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+                      change ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                        ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ))) *
+                        (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) = _
+                      rw [Matrix.mul_smul, Matrix.mul_assoc, Matrix.smul_mul]
+                      simp [Matrix.mul_assoc]
+            rw [h1, h2]
+    _ = c • Matrix.vecMulVec ψ (star ψ) + (-c) • Matrix.vecMulVec φ (star φ) := by
+          rw [hi_single, hj_single]
+    _ = c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ)) := by
+          ext a b
+          simp [sub_eq_add_neg]
+          ring
+
+/-- Vectorization of a square matrix as a pure state ket on `d × d`. -/
+private def vecKetGen
+    {d : Type u} [Fintype d] [DecidableEq d] (A : Matrix d d ℂ) : d × d → ℂ :=
+  fun ij => A ij.1 ij.2
+
+/-- The left partial trace of a vectorized rank-one operator is the transpose of the
+    corresponding Gram matrix. -/
+private theorem partialTraceLeft_vecMulVec_vecKetGen
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (A B : Matrix d d ℂ) :
+    partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen B))) =
+      (Bᴴ * A)ᵀ := by
+  ext i j
+  simp [partialTraceLeft, vecKetGen, Matrix.vecMulVec_apply, Matrix.mul_apply,
+    Matrix.conjTranspose_apply, mul_comm]
+
+/-- Equality of reduced states for vectorized pure states is equivalent to equality of the
+    underlying Gram matrices. -/
+private theorem partialTraceLeft_vecMulVec_eq_iff
+    {d : Type u} [Fintype d] [DecidableEq d]
+    {A B : Matrix d d ℂ} :
+    partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
+      partialTraceLeft d d (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) ↔
+      Aᴴ * A = Bᴴ * B := by
+  rw [partialTraceLeft_vecMulVec_vecKetGen (A := A) (B := A),
+    partialTraceLeft_vecMulVec_vecKetGen (A := B) (B := B)]
+  constructor
+  · intro h
+    exact Matrix.transpose_injective h
+  · intro h
+    exact congrArg Matrix.transpose h
+
+/-- Matrix factorization form of Uhlmann's pure-state theorem. -/
+private theorem uhlmann_matrix_factor
+    {d : Type u} [Fintype d] [DecidableEq d]
+    {A B : Matrix d d ℂ} (hGram : Aᴴ * A = Bᴴ * B) :
+    ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧ B = U * A := by
+  let E := EuclideanSpace ℂ d
+  let LA : E →ₗ[ℂ] E := Matrix.toEuclideanLin A
+  let LB : E →ₗ[ℂ] E := Matrix.toEuclideanLin B
+  have toEuclideanLin_mul :
+      ∀ M N : Matrix d d ℂ,
+        Matrix.toEuclideanLin (M * N) = Matrix.toEuclideanLin M ∘ₗ Matrix.toEuclideanLin N := by
+    intro M N
+    rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
+    simpa [Matrix.toEuclideanLin_eq_toLin_orthonormal] using
+      (Matrix.toLin_mul
+        (EuclideanSpace.basisFun d ℂ).toBasis
+        (EuclideanSpace.basisFun d ℂ).toBasis
+        (EuclideanSpace.basisFun d ℂ).toBasis M N)
+  have hAdj :
+      LinearMap.adjoint LA ∘ₗ LA = LinearMap.adjoint LB ∘ₗ LB := by
+    calc
+      LinearMap.adjoint LA ∘ₗ LA = Matrix.toEuclideanLin (Aᴴ * A) := by
+        rw [show LinearMap.adjoint LA = Matrix.toEuclideanLin Aᴴ by
+              simp [LA, Matrix.toEuclideanLin_conjTranspose_eq_adjoint]]
+        exact (toEuclideanLin_mul _ _).symm
+      _ = Matrix.toEuclideanLin (Bᴴ * B) := by rw [hGram]
+      _ = LinearMap.adjoint LB ∘ₗ LB := by
+        rw [show LinearMap.adjoint LB = Matrix.toEuclideanLin Bᴴ by
+              simp [LB, Matrix.toEuclideanLin_conjTranspose_eq_adjoint]]
+        exact toEuclideanLin_mul _ _
+  have hInner :
+      ∀ x y : E, inner ℂ (LA x) (LA y) = inner ℂ (LB x) (LB y) := by
+    intro x y
+    calc
+      inner ℂ (LA x) (LA y) = inner ℂ x ((LinearMap.adjoint LA ∘ₗ LA) y) := by
+        simpa using (LinearMap.adjoint_inner_right (A := LA) (x := x) (y := LA y)).symm
+      _ = inner ℂ x ((LinearMap.adjoint LB ∘ₗ LB) y) := by rw [hAdj]
+      _ = inner ℂ (LB x) (LB y) := by
+        simpa using (LinearMap.adjoint_inner_right (A := LB) (x := x) (y := LB y))
+  have hKer : LinearMap.ker LA = LinearMap.ker LB := by
+    ext x
+    simp only [LinearMap.mem_ker]
+    constructor <;> intro hx
+    · have h0 : inner ℂ (LB x) (LB x) = 0 := by
+        simpa [hx] using (hInner x x).symm
+      exact (inner_self_eq_zero).1 h0
+    · have h0 : inner ℂ (LA x) (LA x) = 0 := by
+        simpa [hx] using hInner x x
+      exact (inner_self_eq_zero).1 h0
+  letI : Module.Free ℂ LA.range := Module.Free.of_divisionRing ℂ LA.range
+  rcases LA.rangeRestrict.exists_rightInverse_of_surjective LA.range_rangeRestrict with ⟨g, hg⟩
+  let Llin : LA.range →ₗ[ℂ] E := LB.comp g
+  have hLinner : ∀ x y : LA.range, inner ℂ (Llin x) (Llin y) = inner ℂ x y := by
+    intro x y
+    have hx : LA (g x) = x := by
+      exact congrArg Subtype.val (LinearMap.congr_fun hg x)
+    have hy : LA (g y) = y := by
+      exact congrArg Subtype.val (LinearMap.congr_fun hg y)
+    calc
+      inner ℂ (Llin x) (Llin y) = inner ℂ (LB (g x)) (LB (g y)) := by rfl
+      _ = inner ℂ (LA (g x)) (LA (g y)) := by symm; exact hInner (g x) (g y)
+      _ = inner ℂ x y := by simpa [hx, hy]
+  let L : LA.range →ₗᵢ[ℂ] E := by
+    refine { toLinearMap := Llin, norm_map' := ?_ }
+    intro x
+    rw [norm_eq_sqrt_re_inner (𝕜 := ℂ) (x := Llin x),
+      norm_eq_sqrt_re_inner (𝕜 := ℂ) (x := x), hLinner x x]
+  let Ue : E →ₗᵢ[ℂ] E := L.extend
+  have hL_apply (x : E) : L ⟨LA x, LinearMap.mem_range_self LA x⟩ = LB x := by
+    have hxA : LA (g ⟨LA x, LinearMap.mem_range_self LA x⟩) = LA x := by
+      exact congrArg Subtype.val (LinearMap.congr_fun hg ⟨LA x, LinearMap.mem_range_self LA x⟩)
+    have hxKerA : g ⟨LA x, LinearMap.mem_range_self LA x⟩ - x ∈ LinearMap.ker LA := by
+      simp [LinearMap.mem_ker, hxA]
+    have hxKerB : g ⟨LA x, LinearMap.mem_range_self LA x⟩ - x ∈ LinearMap.ker LB := by
+      simpa [hKer] using hxKerA
+    have hxB : LB (g ⟨LA x, LinearMap.mem_range_self LA x⟩) = LB x := by
+      apply sub_eq_zero.mp
+      simpa [LinearMap.mem_ker, LinearMap.sub_apply] using hxKerB
+    simpa [L, Llin] using hxB
+  have hUeA : ∀ x : E, Ue (LA x) = LB x := by
+    intro x
+    let y : LA.range := ⟨LA x, LinearMap.mem_range_self LA x⟩
+    calc
+      Ue (LA x) = Ue y := by rfl
+      _ = L y := by simpa [Ue] using (LinearIsometry.extend_apply (L := L) y)
+      _ = LB x := by simpa [y] using hL_apply x
+  have hUeAdjCLM :
+      ContinuousLinearMap.adjoint Ue.toContinuousLinearMap ∘L Ue.toContinuousLinearMap = 1 := by
+    exact (ContinuousLinearMap.norm_map_iff_adjoint_comp_self _).mp Ue.norm_map
+  have hUeAdj : LinearMap.adjoint Ue.toLinearMap ∘ₗ Ue.toLinearMap = LinearMap.id := by
+    simpa using congrArg ContinuousLinearMap.toLinearMap hUeAdjCLM
+  let bStd := (EuclideanSpace.basisFun d ℂ).toBasis
+  let U : Matrix d d ℂ := LinearMap.toMatrix bStd bStd Ue.toLinearMap
+  have hU : Uᴴ * U = 1 := by
+    have hmat := congrArg (LinearMap.toMatrix bStd bStd) hUeAdj
+    rw [LinearMap.toMatrix_comp bStd bStd bStd, LinearMap.toMatrix_adjoint,
+      LinearMap.toMatrix_id] at hmat
+    simpa [U] using hmat
+  have hAstd : LinearMap.toMatrix bStd bStd LA = A := by
+    change (LinearMap.toMatrix bStd bStd) ((Matrix.toLin bStd bStd) A) = A
+    exact LinearMap.toMatrix_toLin bStd bStd A
+  have hBstd : LinearMap.toMatrix bStd bStd LB = B := by
+    change (LinearMap.toMatrix bStd bStd) ((Matrix.toLin bStd bStd) B) = B
+    exact LinearMap.toMatrix_toLin bStd bStd B
+  have hBA : B = U * A := by
+    have hcomp : Ue.toLinearMap ∘ₗ LA = LB := LinearMap.ext hUeA
+    have hmat := congrArg (LinearMap.toMatrix bStd bStd) hcomp
+    rw [LinearMap.toMatrix_comp bStd bStd bStd] at hmat
+    simpa [U, hAstd, hBstd] using hmat.symm
+  exact ⟨U, hU, hBA⟩
 
 /-- Background pure-state form of Uhlmann's theorem. -/
-axiom uhlmann_theorem_pure
+theorem uhlmann_theorem_pure
     {d : Type u} [Fintype d] [DecidableEq d]
     (ψ φ : d × d → ℂ)
     (hred :
       partialTraceLeft d d (Matrix.vecMulVec ψ (star ψ)) =
         partialTraceLeft d d (Matrix.vecMulVec φ (star φ))) :
     ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧
-      φ = fun ij => ∑ a, U ij.1 a * ψ (a, ij.2)
+      φ = fun ij => ∑ a, U ij.1 a * ψ (a, ij.2) := by
+  let A : Matrix d d ℂ := fun i j => ψ (i, j)
+  let B : Matrix d d ℂ := fun i j => φ (i, j)
+  have hredAB :
+      partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
+        partialTraceLeft d d (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) := by
+    simpa [A, B, vecKetGen] using hred
+  have hGram : Aᴴ * A = Bᴴ * B := (partialTraceLeft_vecMulVec_eq_iff.mp hredAB)
+  obtain ⟨U, hU, hBA⟩ := uhlmann_matrix_factor hGram
+  refine ⟨U, hU, ?_⟩
+  funext ij
+  have hij := congrArg (fun M : Matrix d d ℂ => M ij.1 ij.2) hBA
+  simpa [A, B, Matrix.mul_apply] using hij
 
 set_option maxHeartbeats 1000000
 /-- Background unitary diagonalization theorem. -/
