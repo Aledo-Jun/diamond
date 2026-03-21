@@ -486,6 +486,27 @@ private theorem isClosed_posSemidef_set
               IsClosed ((fun M : Matrix n n ℂ => star x ⬝ᵥ (M *ᵥ x)) ⁻¹' Set.Ici (0 : ℂ))))
   exact hquad
 
+private theorem isCompact_densityStateSet
+    {n : Type u} [Fintype n] [DecidableEq n] :
+    IsCompact ({ρ : Matrix n n ℂ | IsDensityState ρ} : Set (Matrix n n ℂ)) := by
+  letI : NormedAddCommGroup (Matrix n n ℂ) := Matrix.frobeniusNormedAddCommGroup
+  letI : NormedSpace ℂ (Matrix n n ℂ) := Matrix.frobeniusNormedSpace
+  have hclosed : IsClosed ({ρ : Matrix n n ℂ | IsDensityState ρ} : Set (Matrix n n ℂ)) := by
+    have htr : IsClosed {A : Matrix n n ℂ | Matrix.trace A = 1} := by
+      simpa using
+        isClosed_eq ((Matrix.traceLinearMap n ℂ ℂ).continuous_of_finiteDimensional) continuous_const
+    simpa [IsDensityState, Set.setOf_and] using isClosed_posSemidef_set.inter htr
+  have hbounded : Bornology.IsBounded ({ρ : Matrix n n ℂ | IsDensityState ρ} : Set (Matrix n n ℂ)) := by
+    refine (Metric.isBounded_closedBall (x := (0 : Matrix n n ℂ)) (r := 1)).subset ?_
+    intro ρ hρ
+    simp [Metric.mem_closedBall, dist_eq_norm]
+    simpa [hsNormOp, hsNorm] using densityState_hsNorm_le_one ⟨ρ, hρ⟩
+  letI : FiniteDimensional ℂ (Matrix n n ℂ) := inferInstance
+  letI : ProperSpace (Matrix n n ℂ) :=
+    @FiniteDimensional.proper ℂ inferInstance (Matrix n n ℂ)
+      Matrix.frobeniusNormedAddCommGroup Matrix.frobeniusNormedSpace inferInstance inferInstance
+  exact Metric.isCompact_of_isClosed_isBounded hclosed hbounded
+
 private theorem phiStateGen_trace
     (d : Type u) [Fintype d] [DecidableEq d] [Nonempty d] :
     Matrix.trace (phiStateGen d) = 1 := by
