@@ -17,10 +17,18 @@ universe u
 
 noncomputable section
 
+set_option backward.isDefEq.respectTransparency false in
+private theorem posSemidef_iff_eq_conjTranspose_mul_self'
+    {n : Type u} [Fintype n] {A : Matrix n n ℂ} :
+    A.PosSemidef ↔ ∃ B : Matrix n n ℂ, A = Bᴴ * B := by
+  classical
+  exact Matrix.nonneg_iff_posSemidef (A := A) |>.eq ▸
+    CStarAlgebra.nonneg_iff_eq_star_mul_self
+
 private theorem densityState_hsNorm_le_one
     {n : Type u} [Fintype n] [DecidableEq n]
     (ρ : DensityState n) : hsNormOp ρ.1 ≤ 1 := by
-  rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ.2.1 with ⟨B, hB⟩
+  rcases posSemidef_iff_eq_conjTranspose_mul_self'.mp ρ.2.1 with ⟨B, hB⟩
   have hsum : ∑ i, ∑ j, ‖B i j‖ ^ (2 : ℝ) = 1 := by
     have htrace : Matrix.trace (Bᴴ * B) = 1 := by
       simpa [hB] using ρ.2.2
@@ -40,10 +48,10 @@ private theorem densityState_hsNorm_le_one
     norm_num
   have hBstar : hsNormOp Bᴴ = hsNormOp B := by
     change ‖Bᴴ‖ = ‖B‖
-    simpa using Matrix.frobenius_norm_conjTranspose B
+    exact Matrix.frobenius_norm_conjTranspose B
   calc
     hsNormOp ρ.1 = hsNormOp (Bᴴ * B) := by
-      simpa [hB]
+      rw [hB]
     _ ≤ hsNormOp Bᴴ * hsNormOp B := by
       change ‖Bᴴ * B‖ ≤ ‖Bᴴ‖ * ‖B‖
       exact Matrix.frobenius_norm_mul _ _
@@ -61,7 +69,7 @@ private def phiStateGen (d : Type u) [Fintype d] [DecidableEq d] :
   Matrix.vecMulVec (omegaVecGen d) (star (omegaVecGen d))
 
 private theorem inv_sqrt_mul_inv_sqrt_card
-    (d : Type u) [Fintype d] [DecidableEq d] [Nonempty d] :
+    (d : Type u) [Fintype d] [Nonempty d] :
     ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) * ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) =
       ((Fintype.card d : ℂ)⁻¹) := by
   have hd_pos_nat : 0 < Fintype.card d := Fintype.card_pos_iff.mpr ‹Nonempty d›
@@ -206,7 +214,8 @@ theorem transpose_diamond_exact
         traceNormOp (tensorWithIdentity d d (transposeMap d) ρ.1) ≤ diamondOp (transposeMap d) :=
       traceNorm_apply_le_diamond (d := d) (k := d) (Φ := transposeMap d) ρ
     have hswap :
-        tensorWithIdentity d d (transposeMap d) ρ.1 = ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
+        tensorWithIdentity d d (transposeMap d) ρ.1 =
+          ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
       simpa [ρ] using transpose_phiStateGen_eq_swap d
     have hU : swapMatrixGen d * (swapMatrixGen d)ᴴ = 1 := by
       rw [swapMatrixGen_conjTranspose, swapMatrixGen_mul_self]
@@ -216,9 +225,17 @@ theorem transpose_diamond_exact
         traceNormOp (((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d)
           = traceNormOp ((((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) *
               swapMatrixGen d) := by
-                simpa [one_mul] using
-                  (smul_mul_assoc ((Fintype.card d : ℂ)⁻¹)
-                    (1 : Matrix (d × d) (d × d) ℂ) (swapMatrixGen d)).symm
+                congr 1
+                symm
+                calc
+                  (((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) *
+                      swapMatrixGen d =
+                    ((Fintype.card d : ℂ)⁻¹) •
+                      ((1 : Matrix (d × d) (d × d) ℂ) * swapMatrixGen d) :=
+                    smul_mul_assoc ((Fintype.card d : ℂ)⁻¹)
+                      (1 : Matrix (d × d) (d × d) ℂ) (swapMatrixGen d)
+                  _ = ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
+                    rw [one_mul]
         _ = traceNormOp (((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) := by
               exact traceNormOp_mul_right_isometry
                 (X := ((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ))

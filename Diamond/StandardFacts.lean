@@ -163,6 +163,14 @@ theorem diamond_le_of_pointwise_nonempty
     diamondOp Φ ≤ b := by
   exact diamond_le_of_pointwise (d := d) Φ b hbound
 
+set_option backward.isDefEq.respectTransparency false in
+private theorem posSemidef_iff_eq_conjTranspose_mul_self'
+    {n : Type u} [Fintype n] {A : Matrix n n ℂ} :
+    A.PosSemidef ↔ ∃ B : Matrix n n ℂ, A = Bᴴ * B := by
+  classical
+  exact Matrix.nonneg_iff_posSemidef (A := A) |>.eq ▸
+    CStarAlgebra.nonneg_iff_eq_star_mul_self
+
 /-- Concrete witness bound for the diamond norm defined in `Setups`. -/
 -- Immediate from the definition of `diamondNormAt`; kept as an explicit axiom in this split
 -- to avoid introducing an auxiliary compactness/attainment argument at this layer.
@@ -175,7 +183,7 @@ theorem traceNorm_apply_le_diamond
   let B : (d × k) × (d × k) → ℝ := fun p =>
     hsNormOp (Ψ (Matrix.single p.1 p.2 (1 : ℂ)))
   have hρhs : hsNormOp ρ.1 ≤ 1 := by
-    rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ.2.1 with ⟨M, hM⟩
+    rcases posSemidef_iff_eq_conjTranspose_mul_self'.mp ρ.2.1 with ⟨M, hM⟩
     have hsum : ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) = 1 := by
       have htrace : Matrix.trace (Mᴴ * M) = 1 := by
         simpa [hM] using ρ.2.2
@@ -197,10 +205,10 @@ theorem traceNorm_apply_le_diamond
       norm_num
     have hMstar : hsNormOp Mᴴ = hsNormOp M := by
       change ‖Mᴴ‖ = ‖M‖
-      simpa using Matrix.frobenius_norm_conjTranspose M
+      exact Matrix.frobenius_norm_conjTranspose M
     calc
       hsNormOp ρ.1 = hsNormOp (Mᴴ * M) := by
-        simpa [hM]
+        rw [hM]
       _ ≤ hsNormOp Mᴴ * hsNormOp M := by
         change ‖Mᴴ * M‖ ≤ ‖Mᴴ‖ * ‖M‖
         exact Matrix.frobenius_norm_mul _ _
@@ -277,7 +285,7 @@ theorem traceNorm_apply_le_diamond
           = (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) ^ (1 / 2 : ℝ) := by
               rw [Real.sqrt_eq_rpow]
         _ = hsNormOp A := by
-              simpa [coeff, hsNormOp, hsNorm, Matrix.frobenius_norm_def, Fintype.sum_prod_type]
+              simp [coeff, hsNormOp, hsNorm, Matrix.frobenius_norm_def, Fintype.sum_prod_type]
     calc
       hsNormOp (Ψ A) ≤ ∑ p : (d × k) × (d × k), coeff p * B p := hsum
       _ ≤ Real.sqrt (∑ p : (d × k) × (d × k), coeff p ^ (2 : ℝ)) *
@@ -298,7 +306,7 @@ theorem traceNorm_apply_le_diamond
     have hhsρ : hsNormOp (Ψ ρ'.1) ≤
         hsNormOp ρ'.1 * Real.sqrt (∑ p : (d × k) × (d × k), B p ^ (2 : ℝ)) := hhs ρ'.1
     have hρ'hs : hsNormOp ρ'.1 ≤ 1 := by
-      rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ'.2.1 with ⟨M, hM⟩
+      rcases posSemidef_iff_eq_conjTranspose_mul_self'.mp ρ'.2.1 with ⟨M, hM⟩
       have hsum : ∑ i, ∑ j, ‖M i j‖ ^ (2 : ℝ) = 1 := by
         have htrace : Matrix.trace (Mᴴ * M) = 1 := by
           simpa [hM] using ρ'.2.2
@@ -320,9 +328,9 @@ theorem traceNorm_apply_le_diamond
         norm_num
       have hMstar : hsNormOp Mᴴ = hsNormOp M := by
         change ‖Mᴴ‖ = ‖M‖
-        simpa using Matrix.frobenius_norm_conjTranspose M
+        exact Matrix.frobenius_norm_conjTranspose M
       calc
-        hsNormOp ρ'.1 = hsNormOp (Mᴴ * M) := by simpa [hM]
+        hsNormOp ρ'.1 = hsNormOp (Mᴴ * M) := by rw [hM]
         _ ≤ hsNormOp Mᴴ * hsNormOp M := by
               change ‖Mᴴ * M‖ ≤ ‖Mᴴ‖ * ‖M‖
               exact Matrix.frobenius_norm_mul _ _
@@ -371,12 +379,12 @@ private theorem tensorWithIdentity_adMap_eq_kronecker
             refine Finset.sum_congr rfl ?_
             intro x hx
             rw [Finset.sum_eq_single b]
-            · simp [Matrix.kroneckerMap_apply, Matrix.one_apply, mul_assoc]
+            · simp [Matrix.kroneckerMap_apply]
             · intro z hz hzb
               have hbz' : b ≠ z := by
                 exact fun h => hzb h.symm
               have hbz : (1 : Matrix k k ℂ) b z = 0 := by
-                simp [Matrix.one_apply, hbz']
+                simp [hbz']
               simp [Matrix.kroneckerMap_apply, hbz]
             · simp
           have hright :
@@ -386,13 +394,12 @@ private theorem tensorWithIdentity_adMap_eq_kronecker
             refine Finset.sum_congr rfl ?_
             intro y hy
             rw [Finset.sum_eq_single e]
-            · simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply, Matrix.one_apply,
-                mul_assoc]
+            · simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply]
             · intro z hz hze
               have hez' : e ≠ z := by
                 exact fun h => hze h.symm
               have hez : (1 : Matrix k k ℂ) e z = 0 := by
-                simp [Matrix.one_apply, hez']
+                simp [hez']
               simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply, hez]
             · simp
           rw [hright]
@@ -416,7 +423,7 @@ private def unitaryVecGen
   fun ij => ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) * U ij.1 ij.2
 
 private theorem inv_sqrt_mul_inv_sqrt_card
-    (d : Type u) [Fintype d] [DecidableEq d] [Nonempty d] :
+    (d : Type u) [Fintype d] [Nonempty d] :
     ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) * ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) =
       ((Fintype.card d : ℂ)⁻¹) := by
   have hd_pos_nat : 0 < Fintype.card d := Fintype.card_pos_iff.mpr ‹Nonempty d›
@@ -441,7 +448,7 @@ private theorem omegaVecGen_dot_self
     ∑ i : d, ∑ j : d, omegaVecGen d (i, j) * star (omegaVecGen d (i, j))
       = ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) * ((Real.sqrt (Fintype.card d : ℝ) : ℂ)⁻¹) *
           (Fintype.card d : ℂ) := by
-            simp [omegaVecGen, mul_assoc, mul_left_comm, mul_comm]
+            simp [omegaVecGen, mul_comm]
     _ = 1 := by
           rw [inv_sqrt_mul_inv_sqrt_card (d := d)]
           field_simp [show (Fintype.card d : ℂ) ≠ 0 by positivity]
@@ -449,7 +456,7 @@ private theorem omegaVecGen_dot_self
 private theorem densityState_hsNorm_le_one
     {n : Type u} [Fintype n] [DecidableEq n]
     (ρ : DensityState n) : hsNormOp ρ.1 ≤ 1 := by
-  rcases (Matrix.posSemidef_iff_eq_conjTranspose_mul_self).mp ρ.2.1 with ⟨B, hB⟩
+  rcases posSemidef_iff_eq_conjTranspose_mul_self'.mp ρ.2.1 with ⟨B, hB⟩
   have hsum : ∑ i, ∑ j, ‖B i j‖ ^ (2 : ℝ) = 1 := by
     have htrace : Matrix.trace (Bᴴ * B) = 1 := by
       simpa [hB] using ρ.2.2
@@ -469,10 +476,10 @@ private theorem densityState_hsNorm_le_one
     norm_num
   have hBstar : hsNormOp Bᴴ = hsNormOp B := by
     change ‖Bᴴ‖ = ‖B‖
-    simpa using Matrix.frobenius_norm_conjTranspose B
+    exact Matrix.frobenius_norm_conjTranspose B
   calc
     hsNormOp ρ.1 = hsNormOp (Bᴴ * B) := by
-      simpa [hB]
+      rw [hB]
     _ ≤ hsNormOp Bᴴ * hsNormOp B := by
       change ‖Bᴴ * B‖ ≤ ‖Bᴴ‖ * ‖B‖
       exact Matrix.frobenius_norm_mul _ _
@@ -483,14 +490,14 @@ private theorem densityState_hsNorm_le_one
       ring
 
 private theorem isClosed_isHermitian_set
-    {n : Type u} [Fintype n] [DecidableEq n] :
+    {n : Type u} :
     IsClosed {M : Matrix n n ℂ | Matrix.IsHermitian M} := by
   have hct : Continuous fun ρ : Matrix n n ℂ => ρᴴ := by
     fun_prop
   simpa [Matrix.IsHermitian, Set.setOf_eq_eq_singleton] using isClosed_eq hct continuous_id
 
 private theorem continuous_dotProduct_mulVec
-    {n : Type u} [Fintype n] [DecidableEq n] (x : n → ℂ) :
+    {n : Type u} [Fintype n] (x : n → ℂ) :
     Continuous fun M : Matrix n n ℂ => star x ⬝ᵥ (M *ᵥ x) := by
   classical
   letI : NormedSpace ℂ (Matrix n n ℂ) := Matrix.frobeniusNormedSpace
@@ -501,8 +508,10 @@ private theorem continuous_dotProduct_mulVec
   simpa using f.continuous_of_finiteDimensional
 
 private theorem isClosed_posSemidef_set
-    {n : Type u} [Fintype n] [DecidableEq n] :
+    {n : Type u} [Finite n] :
     IsClosed {M : Matrix n n ℂ | M.PosSemidef} := by
+  classical
+  letI : Fintype n := Fintype.ofFinite n
   suffices
       IsClosed {M : Matrix n n ℂ | M.IsHermitian ∧ ∀ x : n → ℂ, 0 ≤ star x ⬝ᵥ (M *ᵥ x)} by
     simpa [Matrix.posSemidef_iff_dotProduct_mulVec] using this
@@ -528,7 +537,8 @@ private theorem isCompact_densityStateSet
       simpa using
         isClosed_eq ((Matrix.traceLinearMap n ℂ ℂ).continuous_of_finiteDimensional) continuous_const
     simpa [IsDensityState, Set.setOf_and] using isClosed_posSemidef_set.inter htr
-  have hbounded : Bornology.IsBounded ({ρ : Matrix n n ℂ | IsDensityState ρ} : Set (Matrix n n ℂ)) := by
+  have hbounded :
+      Bornology.IsBounded ({ρ : Matrix n n ℂ | IsDensityState ρ} : Set (Matrix n n ℂ)) := by
     refine (Metric.isBounded_closedBall (x := (0 : Matrix n n ℂ)) (r := 1)).subset ?_
     intro ρ hρ
     simp [Metric.mem_closedBall, dist_eq_norm]
@@ -559,7 +569,7 @@ private theorem isCompact_unitarySet
       (Metric.isBounded_closedBall (x := (0 : Matrix n n ℂ))
         (r := (Fintype.card n : ℝ))).subset ?_
     intro U hU
-    simp [Metric.mem_closedBall, dist_eq_norm]
+    simp only [Metric.mem_closedBall, dist_zero_right]
     rw [Matrix.frobenius_norm_def]
     have hsum :
         ∑ i : n, ∑ j : n, ‖U i j‖ ^ (2 : ℝ) ≤ ∑ i : n, ∑ j : n, (1 : ℝ) ^ (2 : ℝ) := by
@@ -623,36 +633,36 @@ private theorem tensorWithIdentity_phiStateGen_entry
     by_cases hpb : p = b
     · by_cases hqe : q = e
       · subst hpb; subst hqe
-        simp [phiStateGen_apply, Matrix.single_apply]
+        simp [phiStateGen_apply]
       · subst hpb
         have heq : e ≠ q := by
           intro h
           exact hqe h.symm
-        simp [phiStateGen_apply, Matrix.single_apply, hqe, heq]
+        simp [phiStateGen_apply, hqe, heq]
     · by_cases hqe : q = e
       · subst hqe
         have hbp : b ≠ p := by
           intro h
           exact hpb h.symm
-        simp [phiStateGen_apply, Matrix.single_apply, hpb, hbp]
+        simp [phiStateGen_apply, hpb, hbp]
       · have hbp : b ≠ p := by
           intro h
           exact hpb h.symm
         have heq : e ≠ q := by
           intro h
           exact hqe h.symm
-        simp [phiStateGen_apply, Matrix.single_apply, hpb, hbp, hqe, heq]
+        simp [phiStateGen_apply, hpb, hbp, hqe, heq]
   have hsingle :
       Matrix.single b e ((Fintype.card d : ℂ)⁻¹) =
         ((Fintype.card d : ℂ)⁻¹) • Matrix.single b e (1 : ℂ) := by
     ext p q
     by_cases hpb : p = b
     · by_cases hqe : q = e
-      · simp [Matrix.single_apply, hpb, hqe]
-      · simp [Matrix.single_apply, hpb, hqe]
+      · simp [hpb, hqe]
+      · simp [Matrix.single_apply, hpb]
     · by_cases hqe : q = e
-      · simp [Matrix.single_apply, hpb, hqe]
-      · simp [Matrix.single_apply, hpb, hqe]
+      · simp [Matrix.single_apply, hqe]
+      · simp [Matrix.single_apply]
   change Φ (fun p q : d => phiStateGen d (p, b) (q, e)) i j =
     ((Fintype.card d : ℂ)⁻¹) * Φ (Matrix.single b e (1 : ℂ)) i j
   rw [hmat, hsingle, map_smul]
@@ -673,7 +683,9 @@ private theorem tensorWithIdentity_phiStateGen_ne_zero_of_ne_zero
     have hentry := congrArg (fun M : Matrix (d × d) (d × d) ℂ => M (i, b) (j, e)) hzero
     have hentry' :
         ((Fintype.card d : ℂ)⁻¹) * Φ (Matrix.single b e (1 : ℂ)) i j = 0 := by
-      simpa [tensorWithIdentity_phiStateGen_entry (Φ := Φ) (i := i) (j := j) (b := b) (e := e)] using hentry
+      simpa
+        [tensorWithIdentity_phiStateGen_entry (Φ := Φ) (i := i) (j := j) (b := b) (e := e)]
+        using hentry
     exact (mul_eq_zero.mp hentry').resolve_left hcard_ne
   apply hΦ
   ext X i j
@@ -685,9 +697,9 @@ private theorem tensorWithIdentity_phiStateGen_ne_zero_of_ne_zero
       by_cases hab : a = b
       · by_cases hce : c = e
         · subst hab; subst hce
-          simp [Matrix.single_apply]
-        · simp [Matrix.single_apply, hab, hce]
-      · simp [Matrix.single_apply, hab]
+          simp
+        · simp [Matrix.single_apply, hab]
+      · simp [Matrix.single_apply]
     rw [hsingle', map_smul]
   have hdecomp : X = ∑ b : d, ∑ e : d, Matrix.single b e (X b e) := by
     simpa using Matrix.matrix_eq_sum_single X
@@ -805,7 +817,8 @@ theorem lemma_transpose_diamond
         traceNormOp (tensorWithIdentity d d (transposeMap d) ρ.1) ≤ diamondOp (transposeMap d) :=
       traceNorm_apply_le_diamond (d := d) (k := d) (Φ := transposeMap d) ρ
     have hswap :
-        tensorWithIdentity d d (transposeMap d) ρ.1 = ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
+        tensorWithIdentity d d (transposeMap d) ρ.1 =
+          ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
       simpa [ρ] using transpose_phiStateGen_eq_swap d
     have hU : swapMatrixGen d * (swapMatrixGen d)ᴴ = 1 := by
       rw [swapMatrixGen_conjTranspose, swapMatrixGen_mul_self]
@@ -815,9 +828,17 @@ theorem lemma_transpose_diamond
         traceNormOp (((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d)
           = traceNormOp ((((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) *
               swapMatrixGen d) := by
-                simpa [one_mul] using
-                  (smul_mul_assoc ((Fintype.card d : ℂ)⁻¹)
-                    (1 : Matrix (d × d) (d × d) ℂ) (swapMatrixGen d)).symm
+                congr 1
+                symm
+                calc
+                  (((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) *
+                      swapMatrixGen d =
+                    ((Fintype.card d : ℂ)⁻¹) •
+                      ((1 : Matrix (d × d) (d × d) ℂ) * swapMatrixGen d) :=
+                    smul_mul_assoc ((Fintype.card d : ℂ)⁻¹)
+                      (1 : Matrix (d × d) (d × d) ℂ) (swapMatrixGen d)
+                  _ = ((Fintype.card d : ℂ)⁻¹) • swapMatrixGen d := by
+                    rw [one_mul]
         _ = traceNormOp (((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ)) := by
               exact traceNormOp_mul_right_isometry
                 (X := ((Fintype.card d : ℂ)⁻¹) • (1 : Matrix (d × d) (d × d) ℂ))
@@ -861,8 +882,7 @@ private theorem unitaryVecGen_dot_self
           congr 1
           congr 1
           rw [Finset.sum_comm]
-          simp [Matrix.diag, Matrix.mul_apply, Matrix.conjTranspose_apply, mul_assoc,
-            mul_left_comm, mul_comm]
+          simp [Matrix.diag, Matrix.mul_apply, Matrix.conjTranspose_apply, mul_comm]
     _ = c * (c * Matrix.trace (Uᴴ * U)) := by
           simp [Matrix.trace]
     _ = 1 := by
@@ -882,7 +902,7 @@ private theorem omegaVecGen_orthogonal_unitaryVecGen
           refine Finset.sum_congr rfl ?_
           intro i hi
           rw [Finset.sum_eq_single i]
-          · simp [omegaVecGen, unitaryVecGen, c, mul_assoc, mul_left_comm, mul_comm]
+          · simp [omegaVecGen, unitaryVecGen, c, mul_left_comm, mul_comm]
           · intro j hj hji
             have hij : i ≠ j := by
               exact fun h => hji h.symm
@@ -914,16 +934,16 @@ private theorem kronecker_mulVec_omegaVecGen
           refine Finset.sum_congr rfl ?_
           intro x hx
           rw [Finset.sum_eq_single b]
-          · simp [mul_assoc]
+          · simp
           · intro y hy hyb
             have hby' : b ≠ y := by
               exact fun h => hyb h.symm
             have hby : (1 : Matrix d d ℂ) b y = 0 := by
-              simp [Matrix.one_apply, hby']
+              simp [hby']
             simp [hby, omegaVecGen]
           · simp
     _ = unitaryVecGen d U (a, b) := by
-          simpa [omegaVecGen, unitaryVecGen, mul_assoc, mul_comm]
+          simp [omegaVecGen, unitaryVecGen, mul_comm]
 
 private theorem omegaVecGen_vecMul_kronecker_conjTranspose
     {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
@@ -942,20 +962,18 @@ private theorem omegaVecGen_vecMul_kronecker_conjTranspose
           refine Finset.sum_congr rfl ?_
           intro x hx
           rw [Finset.sum_eq_single b]
-          · simp [Matrix.kroneckerMap_apply, Matrix.one_apply, Matrix.conjTranspose_apply,
-              mul_assoc]
+          · simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply]
           · intro y hy hyb
             have hby' : b ≠ y := by
               exact fun h => hyb h.symm
-            simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply, Matrix.one_apply, hyb,
-              hby']
+            simp [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply, hby']
           · simp
     _ = star (unitaryVecGen d U (a, b)) := by
-          rw [Finset.sum_eq_single b]
-          · simp [omegaVecGen, unitaryVecGen, mul_assoc, mul_comm]
-          · intro x hx hxb
-            simp [omegaVecGen, hxb]
-          · simp
+      rw [Finset.sum_eq_single b]
+      · simp [omegaVecGen, unitaryVecGen, mul_comm]
+      · intro x hx hxb
+        simp [omegaVecGen, hxb]
+      · simp
 
 private theorem vecMulVec_isDensityState_of_dotProduct_one
     {ι : Type u} [Fintype ι] [DecidableEq ι] (ψ : ι → ℂ)
@@ -963,7 +981,7 @@ private theorem vecMulVec_isDensityState_of_dotProduct_one
     IsDensityState (Matrix.vecMulVec ψ (star ψ)) := by
   refine ⟨?_, ?_⟩
   · simpa using Matrix.posSemidef_vecMulVec_self_star ψ
-  · simpa [hψ] using Matrix.trace_vecMulVec ψ (star ψ)
+  · rw [Matrix.trace_vecMulVec, hψ]
 
 private theorem tensorWithIdentity_adMap_phiStateGen
     {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
@@ -986,8 +1004,12 @@ private theorem traceNorm_vecMulVec_sub_vecMulVec_of_orthogonal
   let X : Matrix ι ι ℂ := ρ - σ
   have hρpos : ρ.PosSemidef := by simpa [ρ] using Matrix.posSemidef_vecMulVec_self_star ψ
   have hσpos : σ.PosSemidef := by simpa [σ] using Matrix.posSemidef_vecMulVec_self_star φ
-  have hρtr : Matrix.trace ρ = 1 := by simpa [ρ, hψ] using Matrix.trace_vecMulVec ψ (star ψ)
-  have hσtr : Matrix.trace σ = 1 := by simpa [σ, hφ] using Matrix.trace_vecMulVec φ (star φ)
+  have hρtr : Matrix.trace ρ = 1 := by
+    change Matrix.trace (Matrix.vecMulVec ψ (star ψ)) = 1
+    rw [Matrix.trace_vecMulVec, hψ]
+  have hσtr : Matrix.trace σ = 1 := by
+    change Matrix.trace (Matrix.vecMulVec φ (star φ)) = 1
+    rw [Matrix.trace_vecMulVec, hφ]
   have hρσ : ρ * σ = 0 := by
     simp [ρ, σ, Matrix.vecMulVec_mul_vecMulVec, horth]
   have hσρ : σ * ρ = 0 := by
@@ -1128,7 +1150,8 @@ private theorem partialTranspose_hermitian
   rcases i with ⟨a, b⟩
   rcases j with ⟨c, e⟩
   change star (X (a, e) (c, b)) = X (c, b) (a, e)
-  simpa [Matrix.conjTranspose_apply] using congrArg (fun M : Matrix (d × k) (d × k) ℂ => M (c, b) (a, e)) hX
+  simpa [Matrix.conjTranspose_apply] using
+    congrArg (fun M : Matrix (d × k) (d × k) ℂ => M (c, b) (a, e)) hX
 
 private theorem tensorWithIdentity_hermitian_aux
     {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
@@ -1281,7 +1304,7 @@ private theorem exists_unitary_trace_real_eq_traceNorm
           rw [Matrix.trace_mul_cycle V (S * D) Vᴴ]
           have hVmem : V ∈ Matrix.unitaryGroup n ℂ := hH.eigenvectorUnitary.property
           have hVu' : Vᴴ * V = 1 := Matrix.mem_unitaryGroup_iff'.mp hVmem
-          simp [hVu', Matrix.mul_assoc]
+          simp [hVu']
     rw [htrace]
     calc
       Complex.re (Matrix.trace (S * D)) = ∑ i, Complex.re ((S * D) i i) := by
@@ -1441,7 +1464,7 @@ theorem exists_maximizing_state
 
 /-- Background spectral form of a nonzero rank-two traceless Hermitian matrix. -/
 theorem rank_two_traceless_hermitian_decomposition
-    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
+    {d : Type u} [Fintype d] [Nonempty d]
     {X : Matrix (d × d) (d × d) ℂ} :
     X ≠ 0 →
     Matrix.IsHermitian X →
@@ -1450,6 +1473,7 @@ theorem rank_two_traceless_hermitian_decomposition
     ∃ c : ℂ, ∃ ψ φ : d × d → ℂ,
       c ≠ 0 ∧
       X = c • (Matrix.vecMulVec ψ (star ψ) - Matrix.vecMulVec φ (star φ)) := by
+  classical
   intro hX0 hXh htr hr
   let _ := hX0
   let eig : d × d → ℝ := hXh.eigenvalues
@@ -1472,7 +1496,9 @@ theorem rank_two_traceless_hermitian_decomposition
         rw [hS_univ]
         simp
       simpa [Set.mem_insert_iff, Set.mem_singleton_iff] using this
-    exact hkS.elim (fun h => Or.inl (congrArg Subtype.val h)) (fun h => Or.inr (congrArg Subtype.val h))
+    exact hkS.elim
+      (fun h => Or.inl (congrArg Subtype.val h))
+      (fun h => Or.inr (congrArg Subtype.val h))
   have hsum_zero : ∑ k, eig k = 0 := by
     have htraceC : (∑ k, ((eig k : ℝ) : ℂ)) = 0 := by
       simpa [eig, hXh.trace_eq_sum_eigenvalues] using htr
@@ -1522,11 +1548,11 @@ theorem rank_two_traceless_hermitian_decomposition
             ((Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
               rw [hXh.eigenvectorUnitary_mulVec]
       _ = Matrix.vecMulVec (⇑(hXh.eigenvectorBasis idx)) (star ⇑(hXh.eigenvectorBasis idx)) := by
-              rw [show (Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
-                    star ⇑(hXh.eigenvectorBasis idx) by
-                    ext b
-                    simp [Matrix.single_one_vecMul, Matrix.conjTranspose_apply,
-                      hXh.eigenvectorUnitary_apply]]
+              rw [show
+                (Pi.single idx 1) ᵥ* (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
+                  star ⇑(hXh.eigenvectorBasis idx) by
+                ext b
+                simp]
   have hi_single := hsingle iS.1
   have hj_single := hsingle jS.1
   have hD :
@@ -1540,10 +1566,10 @@ theorem rank_two_traceless_hermitian_decomposition
         have hji : jS.1 ≠ iS.1 := by
           exact fun h => hij h.symm
         have hnot : ¬ jS.1 = iS.1 := hji
-        simp [c, eig, Matrix.single_apply, hnot]
+        simp [c, eig, hnot]
       · by_cases haj : a = jS.1
         · subst a
-          simp [c, eig, hj_eq, Matrix.single_apply, hij]
+          simp [c, eig, hj_eq, hij]
         · have hai' : iS.1 ≠ a := fun h => hai h.symm
           have haj' : jS.1 ≠ a := fun h => haj h.symm
           have ha0 : eig a = 0 := by
@@ -1553,14 +1579,14 @@ theorem rank_two_traceless_hermitian_decomposition
               rcases hsupp a hne with h | h
               · exact hai h
               · exact haj h
-          simp [Matrix.diagonal_apply, Matrix.single_apply, hai', haj', c, ha0]
+          simp [hai', haj', c, ha0]
     · have hia : ¬ (iS.1 = a ∧ iS.1 = b) := by
         intro h
         exact hab (h.1.symm.trans h.2)
       have hja : ¬ (jS.1 = a ∧ jS.1 = b) := by
         intro h
         exact hab (h.1.symm.trans h.2)
-      simp [Matrix.diagonal_apply, Matrix.single_apply, hab, hia, hja]
+      simp [hab, hia, hja]
   refine ⟨c, ψ, φ, hc, ?_⟩
   calc
     X = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
@@ -1571,17 +1597,22 @@ theorem rank_two_traceless_hermitian_decomposition
           (c • Matrix.single iS.1 iS.1 (1 : ℂ) + (-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
           (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
             rw [hD]
-    _ = (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
-          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) +
-        (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
-          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) := by
+    _ = ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+            (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
+            (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) +
+          ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+            ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
+            (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
             simp [Matrix.mul_add, add_mul, Matrix.mul_assoc]
-    _ = c • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single iS.1 iS.1 (1 : ℂ) *
-          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) +
-        (-c) • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * Matrix.single jS.1 jS.1 (1 : ℂ) *
-          (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ)) := by
+    _ = c • (((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+            Matrix.single iS.1 iS.1 (1 : ℂ) *
+            (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ))) +
+          (-c) • (((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+            Matrix.single jS.1 jS.1 (1 : ℂ) *
+            (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ))) := by
             have h1 :
-                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
+                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                    (c • Matrix.single iS.1 iS.1 (1 : ℂ)) *
                     (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
                   c • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
                     Matrix.single iS.1 iS.1 (1 : ℂ) *
@@ -1592,7 +1623,8 @@ theorem rank_two_traceless_hermitian_decomposition
                       rw [Matrix.mul_smul, Matrix.mul_assoc, Matrix.smul_mul]
                       simp [Matrix.mul_assoc]
             have h2 :
-                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) * ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
+                (hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
+                    ((-c) • Matrix.single jS.1 jS.1 (1 : ℂ)) *
                     (star hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) =
                   (-c) • ((hXh.eigenvectorUnitary : Matrix (d × d) (d × d) ℂ) *
                     Matrix.single jS.1 jS.1 (1 : ℂ) *
@@ -1703,7 +1735,7 @@ private theorem uhlmann_matrix_factor
     calc
       inner ℂ (Llin x) (Llin y) = inner ℂ (LB (g x)) (LB (g y)) := by rfl
       _ = inner ℂ (LA (g x)) (LA (g y)) := by symm; exact hInner (g x) (g y)
-      _ = inner ℂ x y := by simpa [hx, hy]
+      _ = inner ℂ x y := by simp [hx, hy]
   let L : LA.range →ₗᵢ[ℂ] E := by
     refine { toLinearMap := Llin, norm_map' := ?_ }
     intro x
@@ -1775,7 +1807,8 @@ theorem uhlmann_theorem_pure
   have hij := congrArg (fun M : Matrix d d ℂ => M ij.1 ij.2) hBA
   simpa [A, B, Matrix.mul_apply] using hij
 
-set_option maxHeartbeats 1000000
+set_option maxHeartbeats 1000000 in
+-- The spectral argument below needs a larger heartbeat budget.
 /-- Background unitary diagonalization theorem. -/
 theorem unitary_diagonalization
     {d : Type u} [Fintype d] [DecidableEq d]
@@ -1954,7 +1987,7 @@ theorem unitary_diagonalization
     have hI : star (Complex.I : ℂ) = -Complex.I := by
       norm_num [Complex.ext_iff]
     rw [hLdecomp]
-    simp [map_smulₛₗ LinearMap.adjoint, hAadj, hBadj, hI, sub_eq_add_neg]
+    simp [map_smulₛₗ LinearMap.adjoint, hAadj, hBadj, sub_eq_add_neg]
   have hLapply : ∀ i : d, L (b i) = ω i • b i := by
     intro i
     have hAi : b i ∈ eigenspace A ((idx i).1.2) := by
@@ -1964,8 +1997,7 @@ theorem unitary_diagonalization
     rw [hLdecomp]
     simpa [ω, smul_smul, mul_assoc] using
       show A (b i) + Complex.I • B (b i) = ω i • b i by
-        simp [mem_eigenspace_iff.mp hAi, mem_eigenspace_iff.mp hBi, add_smul, ω, smul_smul,
-          mul_assoc]
+        simp [mem_eigenspace_iff.mp hAi, mem_eigenspace_iff.mp hBi, add_smul, ω, smul_smul]
   have hLadj_apply : ∀ i : d, LinearMap.adjoint L (b i) = star (ω i) • b i := by
     intro i
     have hAi : b i ∈ eigenspace A ((idx i).1.2) := by
@@ -1982,7 +2014,7 @@ theorem unitary_diagonalization
     simpa [ω, smul_smul, mul_assoc] using
       show A (b i) + -(Complex.I • B (b i)) = star (ω i) • b i by
         simp [ω, hAreal, hBreal, mem_eigenspace_iff.mp hAi, mem_eigenspace_iff.mp hBi,
-          sub_eq_add_neg, add_smul, smul_smul, mul_assoc]
+          add_smul, smul_smul]
   have hω : ∀ i : d, ω i * star (ω i) = 1 := by
     intro i
     have hne : b i ≠ 0 := by
@@ -2008,11 +2040,13 @@ theorem unitary_diagonalization
     ext i j
     by_cases hij : i = j
     · subst hij
-      rw [show LinearMap.toMatrix b.toBasis b.toBasis L i i = LinearMap.toMatrixOrthonormal b L i i by
-            rfl, LinearMap.toMatrixOrthonormal_apply_apply]
+      rw [show LinearMap.toMatrix b.toBasis b.toBasis L i i =
+            LinearMap.toMatrixOrthonormal b L i i by rfl,
+        LinearMap.toMatrixOrthonormal_apply_apply]
       simp [hLapply]
-    · rw [show LinearMap.toMatrix b.toBasis b.toBasis L i j = LinearMap.toMatrixOrthonormal b L i j by
-            rfl, LinearMap.toMatrixOrthonormal_apply_apply]
+    · rw [show LinearMap.toMatrix b.toBasis b.toBasis L i j =
+            LinearMap.toMatrixOrthonormal b L i j by rfl,
+        LinearMap.toMatrixOrthonormal_apply_apply]
       simp [hLapply, hij]
   have hUstd : LinearMap.toMatrix bStd bStd L = U := by
     change (LinearMap.toMatrix bStd bStd) ((Matrix.toLin bStd bStd) U) = U
@@ -2059,7 +2093,8 @@ private theorem cotSeq_eq (n : ℕ) :
 
 private theorem tendsto_xSeq_zero : Tendsto xSeq atTop (𝓝 0) := by
   have hinv : Tendsto (fun n : ℕ => ((n : ℝ) + (1 + 1))⁻¹) atTop (𝓝 0) := by
-    have hinv0 := ((tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).comp (tendsto_add_atTop_nat 1))
+    have hinv0 :=
+      ((tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).comp (tendsto_add_atTop_nat 1))
     convert hinv0 using 1
     ext n
     simp [Function.comp, Nat.cast_add, Nat.cast_one, add_assoc]
