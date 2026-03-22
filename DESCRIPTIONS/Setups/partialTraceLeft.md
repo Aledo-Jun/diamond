@@ -22,9 +22,9 @@ def partialTraceLeft
   fun i j => ∑ a, X (a, i) (a, j)
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean
@@ -66,7 +66,7 @@ In ordinary mathematical language, `partialTraceLeft` is the project's formal Le
 - This declaration does not explicitly cite an earlier named declaration from the documented tree; it mostly uses Lean primitives or local algebraic steps.
 
 ### Later declarations that use this one
-- [`partialTranspose_rank_upper_bound`](../StandardFacts/partialTranspose_rank_upper_bound.md) in `StandardFacts.lean`
+- [`partialTranspose_rank_upper_bound`](../PositiveGap/NotTight/partialTranspose_rank_upper_bound.md) in `PositiveGap/NotTight.lean`
 - [`trace_eq_trace_partialTraceLeft`](../StandardFacts/trace_eq_trace_partialTraceLeft.md) in `StandardFacts.lean`
 - [`partialTraceLeft_tensor_zero`](../StandardFacts/partialTraceLeft_tensor_zero.md) in `StandardFacts.lean`
 - [`lemma4`](../PositiveGap/Lemma4/lemma4.md) in `PositiveGap/Lemma4.lean`

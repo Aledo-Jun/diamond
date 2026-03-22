@@ -10,7 +10,7 @@
 
 `tensorWithIdentity` commutes with transposition on the left tensor factor.
 
- In the file `StandardFacts.lean`, it contributes to helper facts and background axioms that the paper treats as standard or external input. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
+ In the file `StandardFacts.lean`, it contributes to helper facts and background reductions that later proofs use directly. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
 
 ## Original code
 
@@ -25,9 +25,9 @@ theorem tensorWithIdentity_comp_transpose
   simp [tensorWithIdentity, partialTransposeMap, LinearMap.comp_apply, transposeMap]
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean

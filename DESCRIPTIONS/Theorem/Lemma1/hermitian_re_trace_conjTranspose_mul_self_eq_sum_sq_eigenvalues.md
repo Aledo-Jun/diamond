@@ -49,9 +49,9 @@ theorem hermitian_re_trace_conjTranspose_mul_self_eq_sum_sq_eigenvalues
           simp [D, Matrix.trace, pow_two]
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean

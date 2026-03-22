@@ -57,9 +57,9 @@ theorem ud_add_eq_mul (d : ℕ) [Fact (1 < d)] (a b : Fin d) :
   simp [A, B, mul_assoc]
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean

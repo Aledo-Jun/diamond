@@ -4,40 +4,53 @@
 
 - Original Lean file: `Diamond/StandardFacts.lean`
 - Declaration name: `diamond_le_of_pointwise`
-- Declaration kind: `axiom`
+- Declaration kind: `theorem`
 
 ## Why this declaration exists
 
-This axiom is the strongest abstract pointwise-to-diamond reduction retained in the file. It covers
-degenerate empty-index edge cases as well as the ordinary nonempty situation.
+This theorem is the abstract pointwise-to-diamond reduction used throughout the project.
 
-The core proof path of Theorem 1 and Remark 1 no longer uses this axiom directly. Those proofs now
-use the proved theorem [`diamond_le_of_pointwise_nonempty`](diamond_le_of_pointwise_nonempty.md),
-which is the exact supremum step appearing in `docs/diamond.md`.
+Earlier versions of the repository treated this step as background input. The current theorem proves
+it directly in the nonempty finite-dimensional setting by showing the supremum set is nonempty and
+then applying `csSup_le`.
 
 ## Current code
 
 ```lean
-axiom diamond_le_of_pointwise
-    {d : Type u} [Fintype d] [DecidableEq d]
+theorem diamond_le_of_pointwise
+    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
     (Φ : Channel d) (b : ℝ)
     (hbound : ∀ ρ : DensityState (d × d),
       traceNormOp (tensorWithIdentity d d Φ ρ.1) ≤ b) :
-    diamondOp Φ ≤ b
+    diamondOp Φ ≤ b := by
+  ...
 ```
+
+## Block-by-block explanation
+
+1. Unfold `diamondOp` into the `sSup` defining `diamondNormAt`.
+2. Build one explicit density state `ρ0` from a basis vector so the witness set is nonempty.
+3. Apply `csSup_le`.
+4. Use the hypothesis `hbound` to show every witness value is at most `b`.
 
 ## Mathematical summary
 
-This declaration says: if every ancilla-`d` density operator gives an output trace norm at most
-`b`, then the stabilized supremum `diamondOp Φ` is also at most `b`.
+The statement is the standard supremum argument:
+
+- if every stabilized test state gives output trace norm at most `b`,
+- then the stabilized supremum defining the diamond norm is also at most `b`.
+
+The `Nonempty d` hypothesis is essential here because the proof needs one explicit density state to
+show the supremum is taken over a nonempty set.
 
 ## Dependencies and downstream use
 
 ### Earlier declarations this depends on
 - [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
 - [`DensityState`](../Setups/DensityState.md) from `Setups.lean`
+- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
 - [`tensorWithIdentity`](../Setups/tensorWithIdentity.md) from `Setups.lean`
+- [`diamondNormAt`](../Setups/diamondNormAt.md) from `Setups.lean`
 - [`diamondOp`](../Setups/diamondOp.md) from `Setups.lean`
 
 ### Related declaration
@@ -47,5 +60,3 @@ This declaration says: if every ancilla-`d` density operator gives an output tra
 
 - [Back to `INDEX.md`](../INDEX.md)
 - [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](adMap_isQuantumChannel.md)
-- [Next declaration in this file](diamond_le_of_pointwise_nonempty.md)

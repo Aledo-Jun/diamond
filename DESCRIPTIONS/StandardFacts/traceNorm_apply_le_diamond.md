@@ -4,81 +4,45 @@
 
 - Original Lean file: `Diamond/StandardFacts.lean`
 - Declaration name: `traceNorm_apply_le_diamond`
-- Declaration kind: `axiom`
+- Declaration kind: `theorem`
 
 ## Why this declaration exists
 
-This axiom is the obvious “a single test state gives a lower witness for the supremum” fact for the diamond norm.
+This theorem is the basic witness bound for the fixed-ancilla diamond norm.
 
- In the file `StandardFacts.lean`, it contributes to helper facts and background axioms that the paper treats as standard or external input. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
+For any particular density state `ρ`, the trace norm of `(Φ ⊗ id)(ρ)` must be bounded by the
+supremum `diamondNormAt Φ`. The proof is no longer assumed as an axiom; it is carried out in
+finite dimension using a Hilbert--Schmidt bound for `tensorWithIdentity` and the fact that density
+states have Hilbert--Schmidt norm at most `1`.
 
-## Original code
+## Current code
 
 ```lean
-axiom traceNorm_apply_le_diamond
+theorem traceNorm_apply_le_diamond
     {d : Type u} [Fintype d] [DecidableEq d] {k : Type u}
     [Fintype k] [DecidableEq k]
     (Φ : Channel d) (ρ : DensityState (d × k)) :
-    traceNormOp (tensorWithIdentity d k Φ ρ.1) ≤ diamondNormAt (d := d) (k := k) Φ
-
-/-- Transposition norm identity `‖Θ‖⋄ = √(d²) = d`. -/
--- Background theorem about the transposition channel norm.
+    traceNormOp (tensorWithIdentity d k Φ ρ.1) ≤ diamondNormAt (d := d) (k := k) Φ := by
+  ...
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
-
-1. Code:
-```lean
-axiom traceNorm_apply_le_diamond
-```
-This line starts the `traceNorm_apply_le_diamond` declaration. Because it begins with `axiom`, Lean now knows what kind of named object is being introduced.
-
-2. Code:
-```lean
-    {d : Type u} [Fintype d] [DecidableEq d] {k : Type u}
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
-
-3. Code:
-```lean
-    [Fintype k] [DecidableEq k]
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
-
-4. Code:
-```lean
-    (Φ : Channel d) (ρ : DensityState (d × k)) :
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  `Channel d` is an abbreviation for a complex-linear map from operators on `d` to operators on `d`.
-
-5. Code:
-```lean
-    traceNormOp (tensorWithIdentity d k Φ ρ.1) ≤ diamondNormAt (d := d) (k := k) Φ
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
-
-6. Code:
-```lean
-/-- Transposition norm identity `‖Θ‖⋄ = √(d²) = d`. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
-
-7. Code:
-```lean
--- Background theorem about the transposition channel norm.
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+1. Rename `tensorWithIdentity d k Φ` to a single map `Ψ`.
+2. Bound `Ψ X` in Hilbert--Schmidt norm by a finite-dimensional operator constant built from the
+   images of matrix basis elements.
+3. Use `lemma2` to pass from trace norm to Hilbert--Schmidt norm.
+4. Use the density-state estimate `‖ρ‖₂ ≤ 1` to remove dependence on the chosen witness.
+5. Conclude with the definition of `diamondNormAt` as a supremum over all density states.
 
 ## Mathematical summary
 
-Restated without Lean syntax, `traceNorm_apply_le_diamond` is the theorem or lemma written above.
+This is the formal version of the obvious supremum inequality:
 
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
+- one particular test state gives one candidate value in the defining set for `diamondNormAt`,
+- so its trace norm can never exceed the supremum.
+
+The Lean proof is longer only because it makes the boundedness of the stabilized map explicit.
 
 ## Dependencies and downstream use
 
@@ -99,5 +63,3 @@ Restated without Lean syntax, `traceNorm_apply_le_diamond` is the theorem or lem
 
 - [Back to `INDEX.md`](../INDEX.md)
 - [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](diamond_le_of_pointwise_nonempty.md)
-- [Next declaration in this file](lemma_transpose_diamond.md)

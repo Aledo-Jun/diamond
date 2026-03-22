@@ -30,9 +30,9 @@ def partialTransposeMap
     simp
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean
@@ -123,7 +123,7 @@ In ordinary mathematical language, `partialTransposeMap` is the project's formal
 
 ### Later declarations that use this one
 - [`tensorWithIdentity_comp_transpose`](../StandardFacts/tensorWithIdentity_comp_transpose.md) in `StandardFacts.lean`
-- [`partialTranspose_rank_upper_bound`](../StandardFacts/partialTranspose_rank_upper_bound.md) in `StandardFacts.lean`
+- [`partialTranspose_rank_upper_bound`](../PositiveGap/NotTight/partialTranspose_rank_upper_bound.md) in `PositiveGap/NotTight.lean`
 - [`lemma3`](../Theorem/Lemma3/lemma3.md) in `Theorem/Lemma3.lean`
 - [`theorem1`](../Theorem/Theorem1/theorem1.md) in `Theorem/Theorem1.lean`
 - [`remark1`](../Theorem/Remark1/remark1.md) in `Theorem/Remark1.lean`

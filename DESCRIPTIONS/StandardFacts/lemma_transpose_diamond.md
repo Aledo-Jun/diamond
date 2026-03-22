@@ -4,52 +4,41 @@
 
 - Original Lean file: `Diamond/StandardFacts.lean`
 - Declaration name: `lemma_transpose_diamond`
-- Declaration kind: `axiom`
+- Declaration kind: `theorem`
 
 ## Why this declaration exists
 
-This axiom records the known value of the transpose map's diamond norm.
+This theorem proves the exact diamond norm of transposition:
 
- In the file `StandardFacts.lean`, it contributes to helper facts and background axioms that the paper treats as standard or external input. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
+\[
+\|\Theta\|_\diamond = \sqrt{\mathrm{card}(d \times d)} = \mathrm{card}(d).
+\]
 
-## Original code
+It used to be treated as background input. The current proof is internal: the upper bound comes
+from the generic pointwise estimate plus `lemma2` and `lemma3`, while the lower bound comes from
+the explicit maximally entangled witness `phiStateGen`.
+
+## Current code
 
 ```lean
-axiom lemma_transpose_diamond
+theorem lemma_transpose_diamond
     {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d] :
-    diamondOp (transposeMap d) = Real.sqrt (Fintype.card (d × d) : ℝ)
+    diamondOp (transposeMap d) = Real.sqrt (Fintype.card (d × d) : ℝ) := by
+  ...
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
-
-1. Code:
-```lean
-axiom lemma_transpose_diamond
-```
-This line starts the `lemma_transpose_diamond` declaration. Because it begins with `axiom`, Lean now knows what kind of named object is being introduced.
-
-2. Code:
-```lean
-    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d] :
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
-
-3. Code:
-```lean
-    diamondOp (transposeMap d) = Real.sqrt (Fintype.card (d × d) : ℝ)
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  `Fintype.card` is the size of a finite index set.
+1. Rewrite the target dimension factor as `card(d)` via `sqrt_card_prod_self`.
+2. Prove the upper bound with `diamond_le_of_pointwise_nonempty`, `lemma2`, and `lemma3`.
+3. Choose the explicit density witness `phiStateGen d`.
+4. Compute its image under transposition and identify it with the swap operator.
+5. Evaluate the trace norm of that witness exactly to get the lower bound.
 
 ## Mathematical summary
 
-Restated without Lean syntax, `lemma_transpose_diamond` is the theorem or lemma written above.
-
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
+The theorem is the project’s formal version of the standard transposition-norm computation. It is
+used repeatedly to replace the dimension factor by `diamondOp (transposeMap d)` in later arguments.
 
 ## Dependencies and downstream use
 
@@ -68,5 +57,3 @@ Restated without Lean syntax, `lemma_transpose_diamond` is the theorem or lemma 
 
 - [Back to `INDEX.md`](../INDEX.md)
 - [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](traceNorm_apply_le_diamond.md)
-- [Next declaration in this file](unitary_channel_diamond_distance_eq_two_of_trace_zero.md)

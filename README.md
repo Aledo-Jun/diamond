@@ -34,7 +34,7 @@ flowchart LR
     accDescr: High-level map of the repository from setup definitions to the main theorem, the positive-gap section, and the end-matter consequences.
 
     setups["Setups.lean<br/>core objects and maps"]
-    facts["StandardFacts.lean<br/>helper lemmas and background axioms"]
+    facts["StandardFacts.lean<br/>helper lemmas and proved reductions"]
     theorem["Theorem/*<br/>main proof flow"]
     gap["PositiveGap/*<br/>finite-dimensional strictness"]
     endm["EndMatter/*<br/>Eq. (7), Eq. (8), coding corollary"]
@@ -107,7 +107,7 @@ Read the development in that same order:
 1. `Setups.lean`
    introduces operators, channels, norms, partial transpose, partial trace, and the special map `Lambda`.
 2. `StandardFacts.lean`
-   collects reusable background lemmas and the small number of explicitly assumed external facts.
+   collects reusable background lemmas and the finite-dimensional reductions used later in the file.
 3. `Theorem/*`
    proves the three matrix-norm lemmas and then the main theorem.
 4. `PositiveGap/*`
@@ -149,24 +149,19 @@ If you are new to Lean, start with the beginner docs:
 - [`DESCRIPTIONS/INDEX.md`](DESCRIPTIONS/INDEX.md)
 
 That index explains Lean syntax, the mathematical objects in the project, and links to one page
-per important declaration with line-by-line explanations.
+per important declaration with block-by-block explanations.
 
-## Notes On Background Axioms
+## Self-Contained Status
 
-The repo is not completely axiom-free. A reduced set of results is still imported as background facts in
-[`Diamond/StandardFacts.lean`](Diamond/StandardFacts.lean), such as:
+The repository is now self-contained at the project level.
 
-- Kraus representation for finite-dimensional quantum channels
-- the abstract edge-case pointwise-to-diamond reduction / witness bounds
-- the known value of the transpose map diamond norm
-- finite-dimensional maximizer existence
-- an asymptotic cotangent lower bound
+- There are no custom `axiom` declarations left in the Lean source under [`Diamond/`](Diamond).
+- There are no `sorry` placeholders left in the project sources.
+- [`Diamond/StandardFacts.lean`](Diamond/StandardFacts.lean) now contains proved helper lemmas and
+  background reductions rather than assumed external facts.
 
-The nonempty supremum step used by Theorem 1 and Remark 1 is now proved internally, and the
-roots-of-unity identity `trace_Ud_eq_zero`, the simultaneous unitary diagonalization theorem, and the
-unitary-channel distance formula used in Eq. (8) are also proved internally. The remaining assumptions
-are isolated in one place so the paper’s own numbered lemmas and main theorem remain visible in the
-Lean proof flow.
+The development still produces some linter and deprecation warnings, but the mathematical argument
+formalized in the repository no longer depends on project-local axioms.
 
 ## Documentation Status
 

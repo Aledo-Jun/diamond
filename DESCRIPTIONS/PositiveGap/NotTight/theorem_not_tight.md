@@ -116,9 +116,9 @@ theorem theorem_not_tight
   exact (lt_irrefl _ this).elim
 ```
 
-## Line-by-line explanation
+## Block-by-block explanation
 
-The explanation below follows the declaration one physical line at a time. For long proofs, some lines are tiny bookkeeping steps; those are still explained, but briefly.
+The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
 
 1. Code:
 ```lean
@@ -743,7 +743,7 @@ Restated without Lean syntax, `theorem_not_tight` is the theorem or lemma writte
 - [`traceNorm_apply_le_diamond`](../../StandardFacts/traceNorm_apply_le_diamond.md) from `StandardFacts.lean`
 - [`lemma_transpose_diamond`](../../StandardFacts/lemma_transpose_diamond.md) from `StandardFacts.lean`
 - [`exists_maximizing_state`](../../StandardFacts/exists_maximizing_state.md) from `StandardFacts.lean`
-- [`partialTranspose_rank_upper_bound`](../../StandardFacts/partialTranspose_rank_upper_bound.md) from `StandardFacts.lean`
+- [`partialTranspose_rank_upper_bound`](partialTranspose_rank_upper_bound.md) from `PositiveGap/NotTight.lean`
 - [`tensorWithIdentity_trace_zero`](../../StandardFacts/tensorWithIdentity_trace_zero.md) from `StandardFacts.lean`
 - [`tensorWithIdentity_hermitian`](../../StandardFacts/tensorWithIdentity_hermitian.md) from `StandardFacts.lean`
 - [`lemma1`](../../Theorem/Lemma1/lemma1.md) from `Theorem/Lemma1.lean`

@@ -2,11 +2,11 @@
 
 ## Welcome
 
-Lean is a programming language and theorem prover. In this repository, it is being used as a machine-checking assistant for mathematics rather than as a general application language. A **definition** in Lean introduces a new object, such as a norm, a class of maps, or a specific matrix construction. A **theorem** or **lemma** is a claim together with a formal proof that Lean checks line by line. An **axiom** is a statement that the project takes as background input instead of proving internally. A **proof** in Lean mixes ordinary mathematical content with short proof instructions, such as “rewrite using this identity” or “simplify this expression”. The crucial point is that Lean does not trust the author: every inference must be justified in a way the system can verify mechanically. That is why the code sometimes looks more explicit than a paper proof. The benefit is that once Lean accepts the file, the logical correctness of the formal proof has been checked all the way down.
+Lean is a programming language and theorem prover. In this repository, it is being used as a machine-checking assistant for mathematics rather than as a general application language. A **definition** in Lean introduces a new object, such as a norm, a class of maps, or a specific matrix construction. A **theorem** or **lemma** is a claim together with a formal proof that Lean checks block by block. A **proof** in Lean mixes ordinary mathematical content with short proof instructions, such as “rewrite using this identity” or “simplify this expression”. The crucial point is that Lean does not trust the author: every inference must be justified in a way the system can verify mechanically. That is why the code sometimes looks more explicit than a paper proof. The benefit is that once Lean accepts the file, the logical correctness of the formal proof has been checked all the way down.
 
 ## How to Read This Repository
 
-The project follows the same order as the mathematical paper. Start with `Setups.lean`, where the main objects and norms are defined. Then read `StandardFacts.lean`, which collects helper lemmas, a few internalized background steps, and the remaining background axioms that later proofs use. The folder `Theorem/*` contains the central proof flow: three preparatory lemmas, the main theorem, and a generalizing remark. The folder `PositiveGap/*` continues the story by showing that the main bound is strict in finite dimension. Finally, `EndMatter/*` contains the lower-bound constructions and the coding-theoretic consequence at the end of the paper. Every linked page below gives a beginner-facing, line-by-line guide to one declaration, so you can move back and forth between the formal code and the mathematical meaning.
+The project follows the same order as the mathematical paper. Start with `Setups.lean`, where the main objects and norms are defined. Then read `StandardFacts.lean`, which collects helper lemmas and proved background reductions used later in the development. The folder `Theorem/*` contains the central proof flow: three preparatory lemmas, the main theorem, and a generalizing remark. The folder `PositiveGap/*` continues the story by showing that the main bound is strict in finite dimension. Finally, `EndMatter/*` contains the lower-bound constructions and the coding-theoretic consequence at the end of the paper. Every linked page below gives a beginner-facing, block-by-block guide to one declaration, so you can move back and forth between the formal code and the mathematical meaning.
 
 ```mermaid
 flowchart LR
@@ -24,7 +24,6 @@ flowchart LR
 - `abbrev`: introduces a shorter alias for an existing expression.
 - `theorem`: states and proves a theorem.
 - `lemma`: states and proves a supporting theorem; mathematically it is just another theorem.
-- `axiom`: records a statement that is assumed rather than proved inside this repository.
 - `namespace`: groups declarations under a shared prefix, here mostly `Diamond`.
 - `section`: opens a local block of declarations and assumptions.
 - `noncomputable`: warns that the declaration uses classical or abstract objects not meant to be executed as an algorithm.
@@ -94,7 +93,7 @@ This file contains foundational objects and notational definitions for operators
 <a id="diamond-standardfacts-lean"></a>
 ### `StandardFacts.lean`
 
-This file contains helper facts, some now-proved background reductions, and the remaining background axioms.
+This file contains helper facts and proved background reductions used throughout the later arguments.
 - [`trNorm_nonneg`](StandardFacts/trNorm_nonneg.md)
 - [`hsNorm_nonneg`](StandardFacts/hsNorm_nonneg.md)
 - [`hsNormOp_eq_zero_iff`](StandardFacts/hsNormOp_eq_zero_iff.md)
@@ -110,7 +109,6 @@ This file contains helper facts, some now-proved background reductions, and the 
 - [`unitary_channel_diamond_distance_eq_two_of_trace_zero`](StandardFacts/unitary_channel_diamond_distance_eq_two_of_trace_zero.md)
 - [`trace_Ud_eq_zero`](StandardFacts/trace_Ud_eq_zero.md)
 - [`exists_maximizing_state`](StandardFacts/exists_maximizing_state.md)
-- [`partialTranspose_rank_upper_bound`](StandardFacts/partialTranspose_rank_upper_bound.md)
 - [`asymptotic_cotangent_lower_bound`](StandardFacts/asymptotic_cotangent_lower_bound.md)
 - [`trace_eq_trace_partialTraceLeft`](StandardFacts/trace_eq_trace_partialTraceLeft.md)
 - [`partialTraceLeft_tensor_zero`](StandardFacts/partialTraceLeft_tensor_zero.md)
@@ -210,6 +208,7 @@ This file contains the finite-dimensional non-tightness argument and the equalit
 - [`lemma1_eq_imp_rank_two`](PositiveGap/NotTight/lemma1_eq_imp_rank_two.md)
 - [`lemma2_eq_imp_full_rank`](PositiveGap/NotTight/lemma2_eq_imp_full_rank.md)
 - [`partialTranspose_ne_zero_of_ne_zero`](PositiveGap/NotTight/partialTranspose_ne_zero_of_ne_zero.md)
+- [`partialTranspose_rank_upper_bound`](PositiveGap/NotTight/partialTranspose_rank_upper_bound.md)
 - [`theorem_not_tight`](PositiveGap/NotTight/theorem_not_tight.md)
 
 <a id="diamond-endmatter-eq7-lean"></a>
