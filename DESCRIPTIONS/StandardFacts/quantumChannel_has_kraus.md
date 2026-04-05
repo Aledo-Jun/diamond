@@ -29,31 +29,31 @@ theorem quantumChannel_has_kraus
   exact hT.kraus
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. The theorem states exactly the usual finite-dimensional Kraus conclusion.
-2. The proof introduces `hT : IsQuantumChannel T`.
-3. The final line returns `hT.kraus`, which is the Kraus witness field already stored in the
-   structure.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-Mathematically, nothing deep is reproved at this point. The content is:
+## Proof / Construction Shape
 
-- if `T` is a quantum channel in the project’s sense,
-- then `T` comes equipped with Kraus operators `E_i`,
-- and this theorem simply projects that data back out.
+Most declarations in this repository follow the same pattern:
 
-## Dependencies and downstream use
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-### Earlier declarations this depends on
-- [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`IsQuantumChannel`](../Setups/IsQuantumChannel.md) from `Setups.lean`
+## Lean Cues
 
-### Later declarations that use this one
-- [`lemma4`](../PositiveGap/Lemma4/lemma4.md) in `PositiveGap/Lemma4.lean`
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

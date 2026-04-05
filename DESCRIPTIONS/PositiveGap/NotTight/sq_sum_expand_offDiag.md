@@ -41,173 +41,31 @@ private lemma sq_sum_expand_offDiag
       simp [pow_two]
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-/-- Expand a square of a finite sum into diagonal and off-diagonal parts. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-2. Code:
-```lean
-private lemma sq_sum_expand_offDiag
-```
-This line starts the `sq_sum_expand_offDiag` declaration. Because it begins with `lemma`, Lean now knows what kind of named object is being introduced.
+## Proof / Construction Shape
 
-3. Code:
-```lean
-    {ι : Type u} [Fintype ι] (p : ι → ℝ) :
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.
+Most declarations in this repository follow the same pattern:
 
-4. Code:
-```lean
-    (∑ i, p i) ^ 2 =
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-5. Code:
-```lean
-      (∑ i, (p i) ^ 2) + ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
+## Lean Cues
 
-6. Code:
-```lean
-  classical
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-7. Code:
-```lean
-  calc
-```
-This line begins a chained calculation. Each displayed step that follows must be justified by the indented proof after `:= by`.
-
-8. Code:
-```lean
-    (∑ i, p i) ^ 2 = (∑ i, p i) * (∑ j, p j) := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-9. Code:
-```lean
-      ring
-```
-This line normalizes an algebraic identity in a commutative ring, just as one would expand and collect like terms by hand.
-
-10. Code:
-```lean
-    _ = ∑ x ∈ ((Finset.univ : Finset ι) ×ˢ (Finset.univ : Finset ι)), p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-11. Code:
-```lean
-      calc
-```
-This line begins a chained calculation. Each displayed step that follows must be justified by the indented proof after `:= by`.
-
-12. Code:
-```lean
-        (∑ i, p i) * (∑ j, p j) = ∑ i, ∑ j, p i * p j := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-13. Code:
-```lean
-          simpa using (Fintype.sum_mul_sum p p)
-```
-This line simplifies the goal using definitions and known equalities. `simpa` means that, after simplification, the desired statement matches a theorem Lean already has.
-
-14. Code:
-```lean
-        _ = ∑ x ∈ ((Finset.univ : Finset ι) ×ˢ (Finset.univ : Finset ι)), p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-15. Code:
-```lean
-          rw [← Finset.sum_product']
-```
-This line uses rewriting. Lean replaces one expression by an equal expression using the lemmas listed in brackets.
-
-16. Code:
-```lean
-    _ = ∑ x ∈ (Finset.univ : Finset ι).diag ∪ (Finset.univ : Finset ι).offDiag,
-```
-This line is one step inside a `calc` block. Lean is checking that the new expression really follows from the previous one.
-
-17. Code:
-```lean
-          p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-18. Code:
-```lean
-      rw [← Finset.diag_union_offDiag]
-```
-This line uses rewriting. Lean replaces one expression by an equal expression using the lemmas listed in brackets.
-
-19. Code:
-```lean
-    _ = (∑ x ∈ (Finset.univ : Finset ι).diag, p x.1 * p x.2) +
-```
-This line is one step inside a `calc` block. Lean is checking that the new expression really follows from the previous one.
-
-20. Code:
-```lean
-          ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-21. Code:
-```lean
-      rw [Finset.sum_union (Finset.disjoint_diag_offDiag (s := (Finset.univ : Finset ι)))]
-```
-This line uses rewriting. Lean replaces one expression by an equal expression using the lemmas listed in brackets.
-
-22. Code:
-```lean
-    _ = (∑ i, (p i) ^ 2) + ∑ x ∈ (Finset.univ : Finset ι).offDiag, p x.1 * p x.2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
-
-23. Code:
-```lean
-      rw [Finset.sum_diag]
-```
-This line uses rewriting. Lean replaces one expression by an equal expression using the lemmas listed in brackets.
-
-24. Code:
-```lean
-      simp [pow_two]
-```
-This line simplifies the goal using definitions and known equalities. `simpa` means that, after simplification, the desired statement matches a theorem Lean already has.
-
-## Mathematical summary
-
-Restated without Lean syntax, `sq_sum_expand_offDiag` is the theorem or lemma written above.
-
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
-
-## Dependencies and downstream use
-
-### Earlier declarations this depends on
-- This declaration does not explicitly cite an earlier named declaration from the documented tree; it mostly uses Lean primitives or local algebraic steps.
-
-### Later declarations that use this one
-- [`pairwise_zero_of_sum_sq_eq_sq_sum`](pairwise_zero_of_sum_sq_eq_sq_sum.md) in `PositiveGap/NotTight.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `PositiveGap/NotTight.lean` section in the index](../../INDEX.md#diamond-positivegap-nottight-lean)
-- [Next declaration in this file](pairwise_zero_of_sum_sq_eq_sq_sum.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

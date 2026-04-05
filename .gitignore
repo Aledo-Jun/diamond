@@ -1,3 +1,6 @@
 /.lake
+/.gauss
+/.codex
+*.axiom_check_backup
 
 AGENTS.md

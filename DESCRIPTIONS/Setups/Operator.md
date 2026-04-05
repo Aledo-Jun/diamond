@@ -18,31 +18,31 @@ This abbreviation gives the project's basic notion of an operator: a square comp
 abbrev Operator (d : Type u) [Fintype d] [DecidableEq d] := Matrix d d ℂ
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-abbrev Operator (d : Type u) [Fintype d] [DecidableEq d] := Matrix d d ℂ
-```
-This line starts the `Operator` declaration. Because it begins with `abbrev`, Lean now knows what kind of named object is being introduced. The bracketed assumptions tell Lean that the relevant index sets are finite and that equality of indices can be checked mechanically. The type information on this line explains what sort of mathematical object the declaration talks about.  `Matrix d d ℂ` means a square matrix with complex entries; the index type `d` tells Lean which rows and columns exist.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-## Mathematical summary
+## Proof / Construction Shape
 
-In ordinary mathematical language, `Operator` is the project's formal Lean name for the object introduced in this declaration.
+Most declarations in this repository follow the same pattern:
 
-## Dependencies and downstream use
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-### Earlier declarations this depends on
-- This declaration does not explicitly cite an earlier named declaration from the documented tree; it mostly uses Lean primitives or local algebraic steps.
+## Lean Cues
 
-### Later declarations that use this one
-- [`Channel`](Channel.md) in `Setups.lean`
-- [`tensorWithIdentity`](tensorWithIdentity.md) in `Setups.lean`
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `Setups.lean` section in the index](../INDEX.md#diamond-setups-lean)
-- [Next declaration in this file](Channel.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

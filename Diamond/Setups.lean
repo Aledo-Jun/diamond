@@ -117,8 +117,13 @@ def partialTransposeMap
     ext i j
     simp
 
-/-- Diamond norm in the paper's form: `sup_k sup_ρ ‖(Φ ⊗ id_k)(ρ)‖₁`. -/
-def diamondNorm
+/-- All-ancilla supremum form of the diamond norm:
+`sup_k sup_ρ ‖(Φ ⊗ id_k)(ρ)‖₁`.
+
+This is kept as a background definition. The paper, and the rest of this
+formalization, work with the standard finite-dimensional `k = d` reduction
+instead. -/
+def diamondNormAllAncillas
     {d : Type u} [Fintype d] [DecidableEq d] (Φ : Channel d) : ℝ :=
   sSup {r : ℝ | ∃ n : ℕ, ∃ ρ : DensityState (d × ULift (Fin n)),
     r = traceNormOp (tensorWithIdentity d (ULift (Fin n)) Φ ρ.1)}
@@ -130,11 +135,24 @@ def diamondNormAt
   sSup {r : ℝ | ∃ ρ : DensityState (d × k),
     r = traceNormOp (tensorWithIdentity d k Φ ρ.1)}
 
-/-- Same-size stabilization.
-It agrees with the full diamond norm by the standard restriction to `k = d`. -/
-abbrev diamondOp
+/-- Diamond norm in the paper's finite-dimensional convention:
+the ancilla is restricted to the input dimension `d`.
+
+This matches the paper's explicit statement that, for maps on `L(ℂ^d)`, the
+supremum may be restricted to `k = d`, and that convention is used throughout
+the repo. -/
+abbrev diamondNorm
     {d : Type u} [Fintype d] [DecidableEq d] (Φ : Channel d) : ℝ :=
   diamondNormAt (d := d) (k := d) Φ
+
+/-- Same-size stabilization, kept as the historical project name. -/
+abbrev diamondOp
+    {d : Type u} [Fintype d] [DecidableEq d] (Φ : Channel d) : ℝ :=
+  diamondNorm Φ
+
+theorem diamondNorm_eq_diamondOp
+    {d : Type u} [Fintype d] [DecidableEq d] (Φ : Channel d) :
+    diamondNorm Φ = diamondOp Φ := rfl
 
 /-- Partial trace over the left factor. -/
 def partialTraceLeft

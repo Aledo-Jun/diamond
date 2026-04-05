@@ -20,69 +20,31 @@ abbrev traceNormOp
   traceNorm X
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-abbrev traceNormOp
-```
-This line starts the `traceNormOp` declaration. Because it begins with `abbrev`, Lean now knows what kind of named object is being introduced.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-2. Code:
-```lean
-    {d : Type u} [Fintype d] [DecidableEq d] (X : Matrix d d ℂ) : ℝ :=
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  `Matrix d d ℂ` means a square matrix with complex entries; the index type `d` tells Lean which rows and columns exist.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
+## Proof / Construction Shape
 
-3. Code:
-```lean
-  traceNorm X
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+Most declarations in this repository follow the same pattern:
 
-## Mathematical summary
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-In ordinary mathematical language, `traceNormOp` is the project's formal Lean name for the object introduced in this declaration.
+## Lean Cues
 
-## Dependencies and downstream use
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-### Earlier declarations this depends on
-- [`traceNorm`](traceNorm.md) from `Setups.lean`
-
-### Later declarations that use this one
-- [`diamondNorm`](diamondNorm.md) in `Setups.lean`
-- [`diamondNormAt`](diamondNormAt.md) in `Setups.lean`
-- [`trNorm_nonneg`](../StandardFacts/trNorm_nonneg.md) in `StandardFacts.lean`
-- [`diamond_le_of_pointwise`](../StandardFacts/diamond_le_of_pointwise.md) in `StandardFacts.lean`
-- [`traceNorm_apply_le_diamond`](../StandardFacts/traceNorm_apply_le_diamond.md) in `StandardFacts.lean`
-- [`exists_maximizing_state`](../StandardFacts/exists_maximizing_state.md) in `StandardFacts.lean`
-- [`traceNormOp_mul_left_isometry`](../Theorem/Lemma1/traceNormOp_mul_left_isometry.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_diagonal`](../Theorem/Lemma1/traceNormOp_diagonal.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_conjTranspose`](../Theorem/Lemma1/traceNormOp_conjTranspose.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_mul_right_isometry`](../Theorem/Lemma1/traceNormOp_mul_right_isometry.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_hermitian_eq_sum_abs_eigenvalues`](../Theorem/Lemma1/traceNormOp_hermitian_eq_sum_abs_eigenvalues.md) in `Theorem/Lemma1.lean`
-- [`lemma1`](../Theorem/Lemma1/lemma1.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_posSemidef_eq_trace`](../Theorem/Lemma1/traceNormOp_posSemidef_eq_trace.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_density_eq_one`](../Theorem/Lemma1/traceNormOp_density_eq_one.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_sub_density_le_two`](../Theorem/Lemma1/traceNormOp_sub_density_le_two.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_eq_of_conjTranspose_mul_self_eq`](../Theorem/Lemma1/traceNormOp_eq_of_conjTranspose_mul_self_eq.md) in `Theorem/Lemma1.lean`
-- [`lemma2`](../Theorem/Lemma2/lemma2.md) in `Theorem/Lemma2.lean`
-- [`theorem1`](../Theorem/Theorem1/theorem1.md) in `Theorem/Theorem1.lean`
-- [`remark1`](../Theorem/Remark1/remark1.md) in `Theorem/Remark1.lean`
-- [`lemma1_eq_imp_rank_two`](../PositiveGap/NotTight/lemma1_eq_imp_rank_two.md) in `PositiveGap/NotTight.lean`
-- [`lemma2_eq_imp_full_rank`](../PositiveGap/NotTight/lemma2_eq_imp_full_rank.md) in `PositiveGap/NotTight.lean`
-- [`theorem_not_tight`](../PositiveGap/NotTight/theorem_not_tight.md) in `PositiveGap/NotTight.lean`
-- [`theorem_eq7_witness_bound`](../EndMatter/Eq7/theorem_eq7_witness_bound.md) in `EndMatter/Eq7.lean`
-- [`theorem_eq7_witness_bound_explicit`](../EndMatter/Eq7/theorem_eq7_witness_bound_explicit.md) in `EndMatter/Eq7.lean`
-- [`explicit_witness_traceNorm_eq_sum`](../EndMatter/Eq7/explicit_witness_traceNorm_eq_sum.md) in `EndMatter/Eq7.lean`
-- [`explicit_witness_traceNorm_eq`](../EndMatter/Eq7/explicit_witness_traceNorm_eq.md) in `EndMatter/Eq7.lean`
-- [`theorem_eq7`](../EndMatter/Eq7/theorem_eq7.md) in `EndMatter/Eq7.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `Setups.lean` section in the index](../INDEX.md#diamond-setups-lean)
-- [Previous declaration in this file](traceNorm.md)
-- [Next declaration in this file](hsNormOp.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

@@ -21,53 +21,31 @@ def traceNorm
   ∑ i, Real.sqrt ((Matrix.isHermitian_conjTranspose_mul_self X).eigenvalues i)
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-/-- Trace norm, realized as the sum of the singular values. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-2. Code:
-```lean
-def traceNorm
-```
-This line starts the `traceNorm` declaration. Because it begins with `def`, Lean now knows what kind of named object is being introduced.
+## Proof / Construction Shape
 
-3. Code:
-```lean
-    {d : Type u} [Fintype d] [DecidableEq d] (X : Matrix d d ℂ) : ℝ :=
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  `Matrix d d ℂ` means a square matrix with complex entries; the index type `d` tells Lean which rows and columns exist.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
+Most declarations in this repository follow the same pattern:
 
-4. Code:
-```lean
-  ∑ i, Real.sqrt ((Matrix.isHermitian_conjTranspose_mul_self X).eigenvalues i)
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-## Mathematical summary
+## Lean Cues
 
-In ordinary mathematical language, `traceNorm` is the project's formal Lean name for the object introduced in this declaration.
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-## Dependencies and downstream use
-
-### Earlier declarations this depends on
-- This declaration does not explicitly cite an earlier named declaration from the documented tree; it mostly uses Lean primitives or local algebraic steps.
-
-### Later declarations that use this one
-- [`traceNormOp`](traceNormOp.md) in `Setups.lean`
-- [`traceNormOp_mul_left_isometry`](../Theorem/Lemma1/traceNormOp_mul_left_isometry.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_diagonal`](../Theorem/Lemma1/traceNormOp_diagonal.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_conjTranspose`](../Theorem/Lemma1/traceNormOp_conjTranspose.md) in `Theorem/Lemma1.lean`
-- [`traceNormOp_eq_of_conjTranspose_mul_self_eq`](../Theorem/Lemma1/traceNormOp_eq_of_conjTranspose_mul_self_eq.md) in `Theorem/Lemma1.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `Setups.lean` section in the index](../INDEX.md#diamond-setups-lean)
-- [Previous declaration in this file](hsNorm.md)
-- [Next declaration in this file](traceNormOp.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

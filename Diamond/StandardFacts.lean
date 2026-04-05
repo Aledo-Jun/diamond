@@ -129,6 +129,30 @@ theorem adMap_isQuantumChannel
       simp [adMap]
     · simpa using hU
 
+/-- Quantum channels preserve positive semidefiniteness. -/
+theorem quantumChannel_maps_posSemidef
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (T : Channel d) (hT : IsQuantumChannel T)
+    {A : Matrix d d ℂ} (hA : A.PosSemidef) :
+    (T A).PosSemidef := by
+  rcases hT.kraus with ⟨r, E, hE, hsumE⟩
+  have hsum :
+      (∑ i : Fin r, E i * A * (E i)ᴴ).PosSemidef := by
+    have hsum_nonneg :
+        0 ≤ ∑ i : Fin r, E i * A * (E i)ᴴ := by
+      exact Finset.sum_nonneg (fun i _ => (hA.mul_mul_conjTranspose_same (E i)).nonneg)
+    exact hsum_nonneg.posSemidef
+  rw [hE]
+  exact hsum
+
+/-- The concrete trace norm is invariant under negation. -/
+theorem traceNormOp_neg
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (X : Matrix d d ℂ) :
+    traceNormOp (-X) = traceNormOp X := by
+  apply traceNormOp_eq_of_conjTranspose_mul_self_eq
+  simp [Matrix.conjTranspose_neg]
+
 /-- Abstract pointwise-to-diamond reduction.
 
     This lemma states the standard `k = d` reduction used throughout the file. -/
@@ -140,7 +164,7 @@ theorem diamond_le_of_pointwise
     (hbound : ∀ ρ : DensityState (d × d),
       traceNormOp (tensorWithIdentity d d Φ ρ.1) ≤ b) :
     diamondOp Φ ≤ b := by
-  unfold diamondOp diamondNormAt
+  unfold diamondOp diamondNorm diamondNormAt
   let i0 : d × d := (Classical.choice ‹Nonempty d›, Classical.choice ‹Nonempty d›)
   let ψ : d × d → ℂ := Pi.single i0 1
   let ρ0 : Matrix (d × d) (d × d) ℂ := Matrix.vecMulVec ψ (star ψ)
@@ -172,8 +196,7 @@ private theorem posSemidef_iff_eq_conjTranspose_mul_self'
     CStarAlgebra.nonneg_iff_eq_star_mul_self
 
 /-- Concrete witness bound for the diamond norm defined in `Setups`. -/
--- Immediate from the definition of `diamondNormAt`; kept as an explicit axiom in this split
--- to avoid introducing an auxiliary compactness/attainment argument at this layer.
+-- This is the basic witness inequality for the fixed-ancilla definition `diamondNormAt`.
 theorem traceNorm_apply_le_diamond
     {d : Type u} [Fintype d] [DecidableEq d] {k : Type u}
     [Fintype k] [DecidableEq k]
@@ -1328,6 +1351,216 @@ private theorem exists_unitary_trace_real_eq_traceNorm
         symm
         simpa using traceNormOp_hermitian_eq_sum_abs_eigenvalues hH
 
+/-- Triangle inequality for the concrete trace norm on Hermitian matrices. -/
+theorem traceNormOp_add_le_of_hermitian
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {H K : Matrix n n ℂ}
+    (hH : Matrix.IsHermitian H) (hK : Matrix.IsHermitian K) :
+    traceNormOp (H + K) ≤ traceNormOp H + traceNormOp K := by
+  have hHK : Matrix.IsHermitian (H + K) := hH.add hK
+  obtain ⟨U, hU, hmax⟩ := exists_unitary_trace_real_eq_traceNorm hHK
+  calc
+    traceNormOp (H + K) = Complex.re (Matrix.trace (U * (H + K))) := hmax.symm
+    _ = Complex.re (Matrix.trace (U * H)) + Complex.re (Matrix.trace (U * K)) := by
+          simp [Matrix.mul_add, Matrix.trace_add, Complex.add_re]
+    _ ≤ traceNormOp H + traceNormOp K := by
+          exact add_le_add
+            (hermitian_unitary_trace_real_le_traceNorm hH hU)
+            (hermitian_unitary_trace_real_le_traceNorm hK hU)
+
+/-- The standard transpose-vs-identity decomposition step used in the Holevo-Werner
+    coding argument. -/
+theorem transpose_triangle_of_hermiticityPreserving
+    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
+    (T : Channel d) (hH : IsHermiticityPreserving T) :
+    diamondOp (transposeMap d) ≤
+      diamondOp ((transposeMap d).comp T) +
+        diamondOp ((transposeMap d).comp (idMinus T)) := by
+  refine diamond_le_of_pointwise_nonempty (d := d) (Φ := transposeMap d)
+    (diamondOp ((transposeMap d).comp T) +
+      diamondOp ((transposeMap d).comp (idMinus T))) ?_
+  intro ρ
+  have hsplit :
+      tensorWithIdentity d d (transposeMap d) ρ.1 =
+        tensorWithIdentity d d ((transposeMap d).comp T) ρ.1 +
+          tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ.1 := by
+    ext i j
+    simp [tensorWithIdentity, transposeMap, idMinus, LinearMap.comp_apply, sub_eq_add_neg,
+      add_left_comm, add_comm]
+  have hHermT :
+      Matrix.IsHermitian
+        (tensorWithIdentity d d ((transposeMap d).comp T) ρ.1) := by
+    have htmp :
+        Matrix.IsHermitian (tensorWithIdentity d d T ρ.1) := by
+      simpa using tensorWithIdentity_hermitian_aux (d := d) (k := d)
+        (Φ := T) hH ρ.2.1.isHermitian
+    simpa [LinearMap.comp_apply] using
+      partialTranspose_hermitian (d := d) (k := d) htmp
+  have hHermIdMinus :
+      Matrix.IsHermitian
+        (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ.1) := by
+    have htmp :
+        Matrix.IsHermitian (tensorWithIdentity d d (idMinus T) ρ.1) := by
+      simpa using tensorWithIdentity_hermitian_aux (d := d) (k := d)
+        (Φ := idMinus T)
+        (by
+          intro X
+          calc
+            idMinus T Xᴴ = Xᴴ - T Xᴴ := by simp [idMinus]
+            _ = Xᴴ - (T X)ᴴ := by rw [hH X]
+            _ = (X - T X)ᴴ := by simp [Matrix.conjTranspose_sub]) ρ.2.1.isHermitian
+    simpa [LinearMap.comp_apply] using
+      partialTranspose_hermitian (d := d) (k := d) htmp
+  have htri :
+      traceNormOp (tensorWithIdentity d d (transposeMap d) ρ.1) ≤
+        traceNormOp (tensorWithIdentity d d ((transposeMap d).comp T) ρ.1) +
+          traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ.1) := by
+    rw [hsplit]
+    exact traceNormOp_add_le_of_hermitian hHermT hHermIdMinus
+  have hleft :
+      traceNormOp (tensorWithIdentity d d ((transposeMap d).comp T) ρ.1) ≤
+        diamondOp ((transposeMap d).comp T) := by
+    simpa [diamondOp, diamondNorm] using
+      traceNorm_apply_le_diamond (d := d) (k := d) (Φ := (transposeMap d).comp T) ρ
+  have hright :
+      traceNormOp (tensorWithIdentity d d ((transposeMap d).comp (idMinus T)) ρ.1) ≤
+        diamondOp ((transposeMap d).comp (idMinus T)) := by
+    simpa [diamondOp, diamondNorm] using
+      traceNorm_apply_le_diamond (d := d) (k := d) (Φ := (transposeMap d).comp (idMinus T)) ρ
+  exact le_trans htri (add_le_add hleft hright)
+
+theorem transpose_triangle_of_quantumChannel
+    {d : Type u} [Fintype d] [DecidableEq d] [Nonempty d]
+    (T : Channel d) (hT : IsQuantumChannel T) :
+    diamondOp (transposeMap d) ≤
+      diamondOp ((transposeMap d).comp T) +
+        diamondOp ((transposeMap d).comp (idMinus T)) := by
+  exact transpose_triangle_of_hermiticityPreserving T hT.hermiticity_preserving
+
+/-- Trace norm contractivity for quantum channels on Hermitian inputs. -/
+theorem traceNormOp_quantumChannel_le_of_hermitian
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (T : Channel d) (hT : IsQuantumChannel T)
+    {X : Matrix d d ℂ} (hX : Matrix.IsHermitian X) :
+    traceNormOp (T X) ≤ traceNormOp X := by
+  let U : Matrix d d ℂ := hX.eigenvectorUnitary
+  let Ustar : Matrix d d ℂ := star hX.eigenvectorUnitary
+  let D : Matrix d d ℂ := Matrix.diagonal (fun i => ((hX.eigenvalues i : ℝ) : ℂ))
+  let Dpos : Matrix d d ℂ :=
+    Matrix.diagonal (fun i => ((if 0 ≤ hX.eigenvalues i then hX.eigenvalues i else 0 : ℝ) : ℂ))
+  let Dneg : Matrix d d ℂ :=
+    Matrix.diagonal (fun i => ((if 0 ≤ hX.eigenvalues i then 0 else -hX.eigenvalues i : ℝ) : ℂ))
+  let P : Matrix d d ℂ := U * Dpos * Ustar
+  let Q : Matrix d d ℂ := U * Dneg * Ustar
+  have hU_right : U * Ustar = 1 := by
+    simpa [U, Ustar] using (Matrix.mem_unitaryGroup_iff).1 hX.eigenvectorUnitary.property
+  have hU_left : Ustar * U = 1 := by
+    simpa [U, Ustar] using (Matrix.mem_unitaryGroup_iff').1 hX.eigenvectorUnitary.property
+  have hDpos_pos : Dpos.PosSemidef := by
+    refine Matrix.PosSemidef.diagonal ?_
+    intro i
+    by_cases h : 0 ≤ hX.eigenvalues i
+    · simp [h]
+    · simp [Dpos, h]
+  have hDneg_pos : Dneg.PosSemidef := by
+    refine Matrix.PosSemidef.diagonal ?_
+    intro i
+    by_cases h : 0 ≤ hX.eigenvalues i
+    · simp [h]
+    · have hnonneg : 0 ≤ -hX.eigenvalues i := by
+        have hle : hX.eigenvalues i ≤ 0 := le_of_not_ge h
+        linarith
+      have hnonnegC : (0 : ℂ) ≤ ((-hX.eigenvalues i : ℝ) : ℂ) := by
+        exact_mod_cast hnonneg
+      simpa [h] using hnonnegC
+  have hP_pos : P.PosSemidef := by
+    simpa [P, U, Ustar, Matrix.mul_assoc] using hDpos_pos.mul_mul_conjTranspose_same U
+  have hQ_pos : Q.PosSemidef := by
+    simpa [Q, U, Ustar, Matrix.mul_assoc] using hDneg_pos.mul_mul_conjTranspose_same U
+  have hdiag_split : D = Dpos - Dneg := by
+    ext i j
+    by_cases hij : i = j
+    · subst hij
+      by_cases h : 0 ≤ hX.eigenvalues i
+      · simp [D, Dpos, Dneg, h]
+      · have hlt : hX.eigenvalues i < 0 := lt_of_not_ge h
+        simp [D, Dpos, Dneg, h]
+    · simp [D, Dpos, Dneg, hij]
+  have hdecomp : X = P - Q := by
+    calc
+      X = U * D * Ustar := by
+            simpa [U, Ustar, D, Matrix.mul_assoc, Unitary.conjStarAlgAut_apply] using
+              hX.spectral_theorem
+      _ = U * (Dpos - Dneg) * Ustar := by rw [hdiag_split]
+      _ = P - Q := by
+            simp [P, Q, Matrix.mul_sub, Matrix.sub_mul, Matrix.mul_assoc]
+  have htraceP :
+      Complex.re (Matrix.trace P) =
+        ∑ i, (if 0 ≤ hX.eigenvalues i then hX.eigenvalues i else 0) := by
+    have htraceP_eq : Matrix.trace P = Matrix.trace Dpos := by
+      calc
+        Matrix.trace P = Matrix.trace (U * Dpos * Ustar) := by rfl
+        _ = Matrix.trace (Ustar * U * Dpos) := by
+              simpa [Matrix.mul_assoc] using Matrix.trace_mul_cycle U Dpos Ustar
+        _ = Matrix.trace Dpos := by simp [hU_left]
+    rw [htraceP_eq]
+    simp [Dpos, Matrix.trace]
+  have htraceQ :
+      Complex.re (Matrix.trace Q) =
+        ∑ i, (if 0 ≤ hX.eigenvalues i then 0 else -hX.eigenvalues i) := by
+    have htraceQ_eq : Matrix.trace Q = Matrix.trace Dneg := by
+      calc
+        Matrix.trace Q = Matrix.trace (U * Dneg * Ustar) := by rfl
+        _ = Matrix.trace (Ustar * U * Dneg) := by
+              simpa [Matrix.mul_assoc] using Matrix.trace_mul_cycle U Dneg Ustar
+        _ = Matrix.trace Dneg := by simp [hU_left]
+    rw [htraceQ_eq]
+    simp [Dneg, Matrix.trace]
+  have htraceNormX :
+      traceNormOp X = Complex.re (Matrix.trace P) + Complex.re (Matrix.trace Q) := by
+    calc
+      traceNormOp X = ∑ i, |hX.eigenvalues i| := by
+            simpa using traceNormOp_hermitian_eq_sum_abs_eigenvalues hX
+      _ = ∑ i,
+            ((if 0 ≤ hX.eigenvalues i then hX.eigenvalues i else 0) +
+              (if 0 ≤ hX.eigenvalues i then 0 else -hX.eigenvalues i)) := by
+            refine Finset.sum_congr rfl ?_
+            intro i hi
+            by_cases h : 0 ≤ hX.eigenvalues i
+            · simp [h, abs_of_nonneg h]
+            · have hlt : hX.eigenvalues i < 0 := lt_of_not_ge h
+              simp [h, abs_of_neg hlt]
+      _ = ∑ i, (if 0 ≤ hX.eigenvalues i then hX.eigenvalues i else 0) +
+            ∑ i, (if 0 ≤ hX.eigenvalues i then 0 else -hX.eigenvalues i) := by
+            rw [Finset.sum_add_distrib]
+      _ = Complex.re (Matrix.trace P) + Complex.re (Matrix.trace Q) := by
+            rw [htraceP, htraceQ]
+  have hTX_decomp : T X = T P - T Q := by rw [hdecomp, map_sub]
+  have hTP_pos : (T P).PosSemidef := quantumChannel_maps_posSemidef T hT hP_pos
+  have hTQ_pos : (T Q).PosSemidef := quantumChannel_maps_posSemidef T hT hQ_pos
+  have htri :
+      traceNormOp (T X) ≤ traceNormOp (T P) + traceNormOp (T Q) := by
+    rw [hTX_decomp, sub_eq_add_neg]
+    have hTP_herm : Matrix.IsHermitian (T P) := hTP_pos.isHermitian
+    have hneg_herm : Matrix.IsHermitian (- (T Q)) := hTQ_pos.isHermitian.neg
+    simpa [traceNormOp_neg] using traceNormOp_add_le_of_hermitian hTP_herm hneg_herm
+  calc
+    traceNormOp (T X) ≤ traceNormOp (T P) + traceNormOp (T Q) := htri
+    _ = Complex.re (Matrix.trace (T P)) + Complex.re (Matrix.trace (T Q)) := by
+          rw [traceNormOp_posSemidef_eq_trace hTP_pos, traceNormOp_posSemidef_eq_trace hTQ_pos]
+    _ = Complex.re (Matrix.trace P) + Complex.re (Matrix.trace Q) := by
+          rw [hT.trace_preserving P, hT.trace_preserving Q]
+    _ = traceNormOp X := htraceNormX.symm
+
+/-- Quantum channels contract the concrete trace distance between density states. -/
+theorem traceNormOp_sub_le_of_quantumChannel
+    {d : Type u} [Fintype d] [DecidableEq d]
+    (T : Channel d) (hT : IsQuantumChannel T)
+    {ρ σ : Matrix d d ℂ} (hρ : IsDensityState ρ) (hσ : IsDensityState σ) :
+    traceNormOp (T ρ - T σ) ≤ traceNormOp (ρ - σ) := by
+  have hHerm : Matrix.IsHermitian (ρ - σ) := hρ.1.isHermitian.sub hσ.1.isHermitian
+  simpa [map_sub] using traceNormOp_quantumChannel_le_of_hermitian T hT hHerm
+
 /-- Finite-dimensional attainment of the left-hand diamond norm in the positive-gap argument.
     This compactness/maximizer step is background to the paper's main flow. -/
 theorem exists_maximizing_state
@@ -1425,7 +1658,8 @@ theorem exists_maximizing_state
   have htrace0_le :
       traceNormOp (Ψ ρ0.1) ≤ diamondOp LΦ := by
     rw [← hrewrite0]
-    simpa [LΦ, diamondOp] using traceNorm_apply_le_diamond (d := d) (k := d) (Φ := LΦ) ρ0
+    simpa [LΦ, diamondOp, diamondNorm] using
+      traceNorm_apply_le_diamond (d := d) (k := d) (Φ := LΦ) ρ0
   have hmax_eq :
       traceNormOp (tensorWithIdentity d d LΦ ρ0.1) = diamondOp LΦ := by
     apply le_antisymm
@@ -1644,15 +1878,16 @@ theorem rank_two_traceless_hermitian_decomposition
 
 /-- Vectorization of a square matrix as a pure state ket on `d × d`. -/
 private def vecKetGen
-    {d : Type u} [Fintype d] [DecidableEq d] (A : Matrix d d ℂ) : d × d → ℂ :=
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    (A : Matrix d k ℂ) : d × k → ℂ :=
   fun ij => A ij.1 ij.2
 
 /-- The left partial trace of a vectorized rank-one operator is the transpose of the
     corresponding Gram matrix. -/
 private theorem partialTraceLeft_vecMulVec_vecKetGen
-    {d : Type u} [Fintype d] [DecidableEq d]
-    (A B : Matrix d d ℂ) :
-    partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen B))) =
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    (A B : Matrix d k ℂ) :
+    partialTraceLeft d k (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen B))) =
       (Bᴴ * A)ᵀ := by
   ext i j
   simp [partialTraceLeft, vecKetGen, Matrix.vecMulVec_apply, Matrix.mul_apply,
@@ -1661,10 +1896,10 @@ private theorem partialTraceLeft_vecMulVec_vecKetGen
 /-- Equality of reduced states for vectorized pure states is equivalent to equality of the
     underlying Gram matrices. -/
 private theorem partialTraceLeft_vecMulVec_eq_iff
-    {d : Type u} [Fintype d] [DecidableEq d]
-    {A B : Matrix d d ℂ} :
-    partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
-      partialTraceLeft d d (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) ↔
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    {A B : Matrix d k ℂ} :
+    partialTraceLeft d k (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
+      partialTraceLeft d k (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) ↔
       Aᴴ * A = Bᴴ * B := by
   rw [partialTraceLeft_vecMulVec_vecKetGen (A := A) (B := A),
     partialTraceLeft_vecMulVec_vecKetGen (A := B) (B := B)]
@@ -1675,35 +1910,37 @@ private theorem partialTraceLeft_vecMulVec_eq_iff
     exact congrArg Matrix.transpose h
 
 /-- Matrix factorization form of Uhlmann's pure-state theorem. -/
-private theorem uhlmann_matrix_factor
-    {d : Type u} [Fintype d] [DecidableEq d]
-    {A B : Matrix d d ℂ} (hGram : Aᴴ * A = Bᴴ * B) :
+private theorem uhlmann_matrix_factor_rect
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    {A B : Matrix d k ℂ} (hGram : Aᴴ * A = Bᴴ * B) :
     ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧ B = U * A := by
-  let E := EuclideanSpace ℂ d
-  let LA : E →ₗ[ℂ] E := Matrix.toEuclideanLin A
-  let LB : E →ₗ[ℂ] E := Matrix.toEuclideanLin B
-  have toEuclideanLin_mul :
-      ∀ M N : Matrix d d ℂ,
-        Matrix.toEuclideanLin (M * N) = Matrix.toEuclideanLin M ∘ₗ Matrix.toEuclideanLin N := by
-    intro M N
+  let E := EuclideanSpace ℂ k
+  let F := EuclideanSpace ℂ d
+  let LA : E →ₗ[ℂ] F := Matrix.toEuclideanLin A
+  let LB : E →ₗ[ℂ] F := Matrix.toEuclideanLin B
+  have toEuclideanLin_mul_rect
+      {l m n : Type u} [Fintype l] [DecidableEq l] [Fintype m] [DecidableEq m]
+      [Fintype n] [DecidableEq n]
+      (M : Matrix l m ℂ) (N : Matrix m n ℂ) :
+      Matrix.toEuclideanLin (M * N) = Matrix.toEuclideanLin M ∘ₗ Matrix.toEuclideanLin N := by
     rw [Matrix.toEuclideanLin_eq_toLin_orthonormal]
     simpa [Matrix.toEuclideanLin_eq_toLin_orthonormal] using
       (Matrix.toLin_mul
-        (EuclideanSpace.basisFun d ℂ).toBasis
-        (EuclideanSpace.basisFun d ℂ).toBasis
-        (EuclideanSpace.basisFun d ℂ).toBasis M N)
+        (EuclideanSpace.basisFun n ℂ).toBasis
+        (EuclideanSpace.basisFun m ℂ).toBasis
+        (EuclideanSpace.basisFun l ℂ).toBasis M N)
   have hAdj :
       LinearMap.adjoint LA ∘ₗ LA = LinearMap.adjoint LB ∘ₗ LB := by
     calc
       LinearMap.adjoint LA ∘ₗ LA = Matrix.toEuclideanLin (Aᴴ * A) := by
         rw [show LinearMap.adjoint LA = Matrix.toEuclideanLin Aᴴ by
               simp [LA, Matrix.toEuclideanLin_conjTranspose_eq_adjoint]]
-        exact (toEuclideanLin_mul _ _).symm
+        exact (toEuclideanLin_mul_rect Aᴴ A).symm
       _ = Matrix.toEuclideanLin (Bᴴ * B) := by rw [hGram]
       _ = LinearMap.adjoint LB ∘ₗ LB := by
         rw [show LinearMap.adjoint LB = Matrix.toEuclideanLin Bᴴ by
               simp [LB, Matrix.toEuclideanLin_conjTranspose_eq_adjoint]]
-        exact toEuclideanLin_mul _ _
+        exact toEuclideanLin_mul_rect Bᴴ B
   have hInner :
       ∀ x y : E, inner ℂ (LA x) (LA y) = inner ℂ (LB x) (LB y) := by
     intro x y
@@ -1725,7 +1962,7 @@ private theorem uhlmann_matrix_factor
       exact (inner_self_eq_zero).1 h0
   letI : Module.Free ℂ LA.range := Module.Free.of_divisionRing ℂ LA.range
   rcases LA.rangeRestrict.exists_rightInverse_of_surjective LA.range_rangeRestrict with ⟨g, hg⟩
-  let Llin : LA.range →ₗ[ℂ] E := LB.comp g
+  let Llin : LA.range →ₗ[ℂ] F := LB.comp g
   have hLinner : ∀ x y : LA.range, inner ℂ (Llin x) (Llin y) = inner ℂ x y := by
     intro x y
     have hx : LA (g x) = x := by
@@ -1733,15 +1970,16 @@ private theorem uhlmann_matrix_factor
     have hy : LA (g y) = y := by
       exact congrArg Subtype.val (LinearMap.congr_fun hg y)
     calc
-      inner ℂ (Llin x) (Llin y) = inner ℂ (LB (g x)) (LB (g y)) := by rfl
+      inner ℂ (Llin x) (Llin y) = inner ℂ (LB (g x)) (LB (g y)) := by
+        rfl
       _ = inner ℂ (LA (g x)) (LA (g y)) := by symm; exact hInner (g x) (g y)
       _ = inner ℂ x y := by simp [hx, hy]
-  let L : LA.range →ₗᵢ[ℂ] E := by
+  let L : LA.range →ₗᵢ[ℂ] F := by
     refine { toLinearMap := Llin, norm_map' := ?_ }
     intro x
     rw [norm_eq_sqrt_re_inner (𝕜 := ℂ) (x := Llin x),
       norm_eq_sqrt_re_inner (𝕜 := ℂ) (x := x), hLinner x x]
-  let Ue : E →ₗᵢ[ℂ] E := L.extend
+  let Ue : F →ₗᵢ[ℂ] F := L.extend
   have hL_apply (x : E) : L ⟨LA x, LinearMap.mem_range_self LA x⟩ = LB x := by
     have hxA : LA (g ⟨LA x, LinearMap.mem_range_self LA x⟩) = LA x := by
       exact congrArg Subtype.val (LinearMap.congr_fun hg ⟨LA x, LinearMap.mem_range_self LA x⟩)
@@ -1765,25 +2003,611 @@ private theorem uhlmann_matrix_factor
     exact (ContinuousLinearMap.norm_map_iff_adjoint_comp_self _).mp Ue.norm_map
   have hUeAdj : LinearMap.adjoint Ue.toLinearMap ∘ₗ Ue.toLinearMap = LinearMap.id := by
     simpa using congrArg ContinuousLinearMap.toLinearMap hUeAdjCLM
-  let bStd := (EuclideanSpace.basisFun d ℂ).toBasis
-  let U : Matrix d d ℂ := LinearMap.toMatrix bStd bStd Ue.toLinearMap
+  let bStdDom := (EuclideanSpace.basisFun k ℂ).toBasis
+  let bStdCod := (EuclideanSpace.basisFun d ℂ).toBasis
+  let U : Matrix d d ℂ := LinearMap.toMatrix bStdCod bStdCod Ue.toLinearMap
   have hU : Uᴴ * U = 1 := by
-    have hmat := congrArg (LinearMap.toMatrix bStd bStd) hUeAdj
-    rw [LinearMap.toMatrix_comp bStd bStd bStd, LinearMap.toMatrix_adjoint,
+    have hmat := congrArg (LinearMap.toMatrix bStdCod bStdCod) hUeAdj
+    rw [LinearMap.toMatrix_comp bStdCod bStdCod bStdCod, LinearMap.toMatrix_adjoint,
       LinearMap.toMatrix_id] at hmat
     simpa [U] using hmat
-  have hAstd : LinearMap.toMatrix bStd bStd LA = A := by
-    change (LinearMap.toMatrix bStd bStd) ((Matrix.toLin bStd bStd) A) = A
-    exact LinearMap.toMatrix_toLin bStd bStd A
-  have hBstd : LinearMap.toMatrix bStd bStd LB = B := by
-    change (LinearMap.toMatrix bStd bStd) ((Matrix.toLin bStd bStd) B) = B
-    exact LinearMap.toMatrix_toLin bStd bStd B
+  have hAstd : LinearMap.toMatrix bStdDom bStdCod LA = A := by
+    change (LinearMap.toMatrix bStdDom bStdCod) ((Matrix.toLin bStdDom bStdCod) A) = A
+    exact LinearMap.toMatrix_toLin bStdDom bStdCod A
+  have hBstd : LinearMap.toMatrix bStdDom bStdCod LB = B := by
+    change (LinearMap.toMatrix bStdDom bStdCod) ((Matrix.toLin bStdDom bStdCod) B) = B
+    exact LinearMap.toMatrix_toLin bStdDom bStdCod B
   have hBA : B = U * A := by
     have hcomp : Ue.toLinearMap ∘ₗ LA = LB := LinearMap.ext hUeA
-    have hmat := congrArg (LinearMap.toMatrix bStd bStd) hcomp
-    rw [LinearMap.toMatrix_comp bStd bStd bStd] at hmat
+    have hmat := congrArg (LinearMap.toMatrix bStdDom bStdCod) hcomp
+    rw [LinearMap.toMatrix_comp bStdDom bStdCod bStdCod] at hmat
     simpa [U, hAstd, hBstd] using hmat.symm
   exact ⟨U, hU, hBA⟩
+
+/-- Right-ancilla matrix factorization:
+    equal left Gram matrices imply equality up to a right-side isometry. -/
+private theorem uhlmann_matrix_factor_right
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    {A B : Matrix d k ℂ} (hLeftGram : A * Aᴴ = B * Bᴴ) :
+    ∃ U : Matrix k k ℂ, Uᴴ * U = 1 ∧ B = A * Uᵀ := by
+  have hGramT : Aᵀᴴ * Aᵀ = Bᵀᴴ * Bᵀ := by
+    ext i j
+    calc
+      (Aᵀᴴ * Aᵀ) i j = (A * Aᴴ) j i := by
+        simp [Matrix.mul_apply, Matrix.conjTranspose_apply, mul_comm]
+      _ = (B * Bᴴ) j i := by
+        exact congrArg (fun M : Matrix d d ℂ => M j i) hLeftGram
+      _ = (Bᵀᴴ * Bᵀ) i j := by
+        simp [Matrix.mul_apply, Matrix.conjTranspose_apply, mul_comm]
+  obtain ⟨U, hU, hUT⟩ := uhlmann_matrix_factor_rect (d := k) (k := d) hGramT
+  refine ⟨U, hU, ?_⟩
+  have hT := congrArg Matrix.transpose hUT
+  simpa [Matrix.transpose_mul, Matrix.conjTranspose_transpose] using hT
+
+private def embeddingMatrix
+    {α β : Type u} [DecidableEq α] [DecidableEq β] (e : α ↪ β) : Matrix β α ℂ :=
+  fun i j => if i = e j then 1 else 0
+
+private theorem embeddingMatrix_conjTranspose_mul_self
+    {α β : Type u} [Fintype α] [DecidableEq α] [Fintype β] [DecidableEq β]
+    (e : α ↪ β) :
+    (embeddingMatrix e)ᴴ * embeddingMatrix e = 1 := by
+  ext i j
+  rw [Matrix.mul_apply]
+  rw [Finset.sum_eq_single (e i)]
+  · by_cases hij : i = j
+    · subst hij
+      simp [embeddingMatrix]
+    · have hneq : e i ≠ e j := by
+        intro h
+        exact hij (e.injective h)
+      simp [embeddingMatrix, hij, hneq]
+  · intro x _ hxe
+    simp [embeddingMatrix, hxe]
+  · simp
+
+private theorem embeddingMatrix_conjTranspose_eq_transpose
+    {α β : Type u} [DecidableEq α] [DecidableEq β] (e : α ↪ β) :
+    (embeddingMatrix e)ᴴ = (embeddingMatrix e)ᵀ := by
+  ext i j
+  simp [embeddingMatrix, Matrix.conjTranspose_apply]
+
+private theorem embeddingMatrix_transpose_mul_self
+    {α β : Type u} [Fintype α] [DecidableEq α] [Fintype β] [DecidableEq β]
+    (e : α ↪ β) :
+    (embeddingMatrix e)ᵀ * embeddingMatrix e = 1 := by
+  rw [← embeddingMatrix_conjTranspose_eq_transpose]
+  exact embeddingMatrix_conjTranspose_mul_self e
+
+/-- Right-ancilla factorization with a larger target ancilla. -/
+private theorem uhlmann_matrix_factor_right_le
+    {d k₁ k₂ : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype k₁] [DecidableEq k₁]
+    [Fintype k₂] [DecidableEq k₂]
+    (hcard : Fintype.card k₁ ≤ Fintype.card k₂)
+    {A : Matrix d k₁ ℂ} {B : Matrix d k₂ ℂ} (hLeftGram : A * Aᴴ = B * Bᴴ) :
+    ∃ U : Matrix k₂ k₁ ℂ, Uᴴ * U = 1 ∧ B = A * Uᵀ := by
+  classical
+  let e₁ : k₁ ≃ Fin (Fintype.card k₁) := Fintype.equivFin k₁
+  let e₂ : k₂ ≃ Fin (Fintype.card k₂) := Fintype.equivFin k₂
+  let eFin : Fin (Fintype.card k₁) ↪ Fin (Fintype.card k₂) := (Fin.castLEOrderEmb hcard).toEmbedding
+  let e : k₁ ↪ k₂ := e₁.toEmbedding.trans (eFin.trans e₂.symm.toEmbedding)
+  let E : Matrix k₂ k₁ ℂ := embeddingMatrix e
+  have hE : Eᴴ * E = 1 := embeddingMatrix_conjTranspose_mul_self e
+  have hEt : Eᵀ * E = 1 := embeddingMatrix_transpose_mul_self e
+  have hEtH : (Eᵀ)ᴴ = E := by
+    calc
+      (Eᵀ)ᴴ = E.map star := by simpa using Matrix.transpose_conjTranspose E
+      _ = E := by
+            ext i j
+            by_cases h : i = e j
+            · simp [E, embeddingMatrix, h]
+            · simp [E, embeddingMatrix, h]
+  let A' : Matrix d k₂ ℂ := A * Eᵀ
+  have hA' : A' * A'ᴴ = A * Aᴴ := by
+    calc
+      A' * A'ᴴ = (A * Eᵀ) * (A * Eᵀ)ᴴ := by rfl
+      _ = A * (Eᵀ * (Eᵀ)ᴴ) * Aᴴ := by
+            simp [Matrix.mul_assoc]
+      _ = A * Aᴴ := by
+            rw [hEtH, hEt]
+            simp [Matrix.mul_assoc]
+  have hPadGram : A' * A'ᴴ = B * Bᴴ := by
+    rw [hA']
+    exact hLeftGram
+  obtain ⟨V, hV, hB⟩ := uhlmann_matrix_factor_right hPadGram
+  let U : Matrix k₂ k₁ ℂ := V * E
+  refine ⟨U, ?_, ?_⟩
+  · calc
+      Uᴴ * U = Eᴴ * (Vᴴ * V) * E := by
+            simp [U, Matrix.conjTranspose_mul, Matrix.mul_assoc]
+      _ = Eᴴ * E := by simp [hV]
+      _ = 1 := hE
+  · calc
+      B = A' * Vᵀ := hB
+      _ = A * Uᵀ := by
+            simp [A', U, Matrix.transpose_mul, Matrix.mul_assoc]
+
+/-- Background pure-state form of Uhlmann's theorem for rectangular ancilla spaces. -/
+theorem uhlmann_theorem_pure_rect
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    (ψ φ : d × k → ℂ)
+    (hred :
+      partialTraceLeft d k (Matrix.vecMulVec ψ (star ψ)) =
+        partialTraceLeft d k (Matrix.vecMulVec φ (star φ))) :
+    ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧
+      φ = fun ij => ∑ a, U ij.1 a * ψ (a, ij.2) := by
+  let A : Matrix d k ℂ := fun i j => ψ (i, j)
+  let B : Matrix d k ℂ := fun i j => φ (i, j)
+  have hredAB :
+      partialTraceLeft d k (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
+        partialTraceLeft d k (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) := by
+    simpa [A, B, vecKetGen] using hred
+  have hGram : Aᴴ * A = Bᴴ * B := (partialTraceLeft_vecMulVec_eq_iff.mp hredAB)
+  obtain ⟨U, hU, hBA⟩ := uhlmann_matrix_factor_rect hGram
+  refine ⟨U, hU, ?_⟩
+  funext ij
+  have hij := congrArg (fun M : Matrix d k ℂ => M ij.1 ij.2) hBA
+  simpa [A, B, Matrix.mul_apply] using hij
+
+/-- If two pure states on `d ⊗ k` have the same left reduced state, then they differ by
+    an ancilla isometry on the right factor. -/
+theorem uhlmann_theorem_pure_right
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    (ψ φ : d × k → ℂ)
+    (hleft :
+      (fun i j : d => ∑ a : k, ψ (i, a) * star (ψ (j, a))) =
+        fun i j : d => ∑ a : k, φ (i, a) * star (φ (j, a))) :
+    ∃ U : Matrix k k ℂ, Uᴴ * U = 1 ∧
+      φ = fun ij => ∑ a, ψ (ij.1, a) * U ij.2 a := by
+  let A : Matrix d k ℂ := fun i j => ψ (i, j)
+  let B : Matrix d k ℂ := fun i j => φ (i, j)
+  have hGram : A * Aᴴ = B * Bᴴ := by
+    ext i j
+    simpa [A, B, Matrix.mul_apply, Matrix.conjTranspose_apply] using congrArg (fun M => M i j) hleft
+  obtain ⟨U, hU, hBA⟩ := uhlmann_matrix_factor_right hGram
+  refine ⟨U, hU, ?_⟩
+  funext ij
+  have hij := congrArg (fun M : Matrix d k ℂ => M ij.1 ij.2) hBA
+  simpa [A, B, Matrix.mul_apply] using hij
+
+/-- Right-side Uhlmann theorem with an enlarged target ancilla. -/
+theorem uhlmann_theorem_pure_right_le
+    {d k₁ k₂ : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype k₁] [DecidableEq k₁]
+    [Fintype k₂] [DecidableEq k₂]
+    (hcard : Fintype.card k₁ ≤ Fintype.card k₂)
+    (ψ : d × k₁ → ℂ) (φ : d × k₂ → ℂ)
+    (hleft :
+      (fun i j : d => ∑ a : k₁, ψ (i, a) * star (ψ (j, a))) =
+        fun i j : d => ∑ a : k₂, φ (i, a) * star (φ (j, a))) :
+    ∃ U : Matrix k₂ k₁ ℂ, Uᴴ * U = 1 ∧
+      φ = fun ij => ∑ a, ψ (ij.1, a) * U ij.2 a := by
+  let A : Matrix d k₁ ℂ := fun i j => ψ (i, j)
+  let B : Matrix d k₂ ℂ := fun i j => φ (i, j)
+  have hGram : A * Aᴴ = B * Bᴴ := by
+    ext i j
+    simpa [A, B, Matrix.mul_apply, Matrix.conjTranspose_apply] using congrArg (fun M => M i j) hleft
+  obtain ⟨U, hU, hBA⟩ := uhlmann_matrix_factor_right_le hcard hGram
+  refine ⟨U, hU, ?_⟩
+  funext ij
+  have hij := congrArg (fun M : Matrix d k₂ ℂ => M ij.1 ij.2) hBA
+  simpa [A, B, Matrix.mul_apply] using hij
+
+/-- The left reduced matrix of the vectorized pure state associated to `A`
+    is exactly `A * Aᴴ`. -/
+private theorem leftReduced_vecKetGen
+    {d k : Type u} [Fintype d] [DecidableEq d] [Fintype k] [DecidableEq k]
+    (A : Matrix d k ℂ) :
+    (fun i j : d => ∑ a : k, vecKetGen A (i, a) * star (vecKetGen A (j, a))) = A * Aᴴ := by
+  ext i j
+  simp [vecKetGen, Matrix.mul_apply, Matrix.conjTranspose_apply, mul_comm]
+
+/-- Canonical `d ⊗ d` purification of a density matrix on `d`. -/
+theorem exists_canonical_purification
+    {d : Type u} [Fintype d] [DecidableEq d]
+    {ρ : Matrix d d ℂ} (hρ : IsDensityState ρ) :
+    ∃ ψ : d × d → ℂ,
+      ψ ⬝ᵥ star ψ = 1 ∧
+      (fun i j : d => ∑ a : d, ψ (i, a) * star (ψ (j, a))) = ρ := by
+  rcases posSemidef_iff_eq_conjTranspose_mul_self'.mp hρ.1 with ⟨M, hM⟩
+  refine ⟨vecKetGen Mᴴ, ?_, ?_⟩
+  · calc
+      vecKetGen Mᴴ ⬝ᵥ star (vecKetGen Mᴴ)
+          = ∑ i : d, ∑ j : d, star (M j i) * M j i := by
+              simp [vecKetGen, dotProduct, Fintype.sum_prod_type]
+      _ = Matrix.trace (Mᴴ * M) := by
+            rw [Matrix.trace]
+            simp [Matrix.mul_apply, Matrix.conjTranspose_apply]
+      _ = 1 := by simpa [hM] using hρ.2
+  · calc
+      (fun i j : d => ∑ a : d, vecKetGen Mᴴ (i, a) * star (vecKetGen Mᴴ (j, a)))
+          = Mᴴ * (Mᴴ)ᴴ := leftReduced_vecKetGen Mᴴ
+      _ = ρ := by simpa [hM]
+
+/-- Any normalized pure state on `d ⊗ k` has a normalized purification on `d ⊗ d`
+    with the same left reduced state. -/
+theorem pure_state_compression_to_input_dim
+    {d k : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype k] [DecidableEq k]
+    (ψ : d × k → ℂ) (hψ : ψ ⬝ᵥ star ψ = 1) :
+    ∃ φ : d × d → ℂ,
+      φ ⬝ᵥ star φ = 1 ∧
+      (fun i j : d => ∑ a : d, φ (i, a) * star (φ (j, a))) =
+        (fun i j : d => ∑ a : k, ψ (i, a) * star (ψ (j, a))) := by
+  let A : Matrix d k ℂ := fun i j => ψ (i, j)
+  let ρ : Matrix d d ℂ := fun i j => ∑ a : k, ψ (i, a) * star (ψ (j, a))
+  have hρ : IsDensityState ρ := by
+    refine ⟨?_, ?_⟩
+    · change (A * Aᴴ).PosSemidef
+      simpa [A, ρ] using Matrix.posSemidef_self_mul_conjTranspose A
+    · change Matrix.trace (A * Aᴴ) = 1
+      rw [Matrix.trace]
+      calc
+        ∑ i : d, (A * Aᴴ) i i = ∑ i : d, ∑ a : k, ψ (i, a) * star (ψ (i, a)) := by
+              simp [A, Matrix.mul_apply, Matrix.conjTranspose_apply]
+        _ = ψ ⬝ᵥ star ψ := by
+              simp [dotProduct, Fintype.sum_prod_type]
+        _ = 1 := hψ
+  obtain ⟨φ, hφnorm, hφred⟩ := exists_canonical_purification hρ
+  refine ⟨φ, hφnorm, ?_⟩
+  simpa [ρ] using hφred
+
+/-- If the ancilla dimension is at least the input dimension, a normalized pure state on
+    `d ⊗ k` factors through a normalized pure state on `d ⊗ d` via an ancilla isometry. -/
+theorem pure_state_compression_to_input_dim_with_isometry
+    {d k : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype k] [DecidableEq k]
+    (hcard : Fintype.card d ≤ Fintype.card k)
+    (ψ : d × k → ℂ) (hψ : ψ ⬝ᵥ star ψ = 1) :
+    ∃ φ : d × d → ℂ, ∃ U : Matrix k d ℂ,
+      Uᴴ * U = 1 ∧
+      φ ⬝ᵥ star φ = 1 ∧
+      ψ = fun ij => ∑ a, φ (ij.1, a) * U ij.2 a := by
+  obtain ⟨φ, hφnorm, hφred⟩ := pure_state_compression_to_input_dim ψ hψ
+  obtain ⟨U, hU, hψeq⟩ := uhlmann_theorem_pure_right_le hcard φ ψ hφred
+  exact ⟨φ, U, hU, hφnorm, hψeq⟩
+
+theorem pure_state_expansion_to_input_dim_with_isometry
+    {d k : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype k] [DecidableEq k]
+    (hcard : Fintype.card k ≤ Fintype.card d)
+    (ψ : d × k → ℂ) (hψ : ψ ⬝ᵥ star ψ = 1) :
+    ∃ φ : d × d → ℂ, ∃ U : Matrix d k ℂ,
+      Uᴴ * U = 1 ∧
+      φ ⬝ᵥ star φ = 1 ∧
+      φ = fun ij => ∑ a, ψ (ij.1, a) * U ij.2 a := by
+  obtain ⟨φ, hφnorm, hφred⟩ := pure_state_compression_to_input_dim ψ hψ
+  obtain ⟨U, hU, hφeq⟩ := uhlmann_theorem_pure_right_le hcard ψ φ hφred.symm
+  exact ⟨φ, U, hU, hφnorm, hφeq⟩
+
+theorem card_le_card_prod_right
+    {α β : Type u} [Fintype α] [Fintype β] [Nonempty β] :
+    Fintype.card α ≤ Fintype.card (α × β) := by
+  let b0 : β := Classical.choice ‹Nonempty β›
+  exact Fintype.card_le_of_injective (fun a : α => (a, b0)) (by
+    intro a₁ a₂ h
+    exact congrArg Prod.fst h)
+
+/-- Product-ancilla specialization of the pure-state compression theorem. -/
+theorem pure_state_compression_to_product_ancilla_with_isometry
+    {d b k : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype b] [DecidableEq b] [Nonempty b]
+    [Fintype k] [DecidableEq k] [Nonempty k]
+    (hcard : Fintype.card d ≤ Fintype.card (b × k))
+    (ψ : d × (b × k) → ℂ) (hψ : ψ ⬝ᵥ star ψ = 1) :
+    ∃ φ : d × d → ℂ, ∃ U : Matrix (b × k) d ℂ,
+      Uᴴ * U = 1 ∧
+      φ ⬝ᵥ star φ = 1 ∧
+      ψ = fun ij => ∑ a, φ (ij.1, a) * U ij.2 a := by
+  exact pure_state_compression_to_input_dim_with_isometry (d := d) (k := b × k) hcard ψ hψ
+
+/-- Compression theorem stated in the nested-product witness shape that appears in
+    `diamondNormAtSuperoperator` for maps on `d × b` with ancilla `k`. -/
+theorem pure_state_nested_product_compression_with_isometry
+    {d b k : Type u}
+    [Fintype d] [DecidableEq d]
+    [Fintype b] [DecidableEq b] [Nonempty b]
+    [Fintype k] [DecidableEq k] [Nonempty k]
+    (hcard : Fintype.card d ≤ Fintype.card (b × k))
+    (ψ : (d × b) × k → ℂ) (hψ : ψ ⬝ᵥ star ψ = 1) :
+    ∃ φ : d × d → ℂ, ∃ U : Matrix (b × k) d ℂ,
+      Uᴴ * U = 1 ∧
+      φ ⬝ᵥ star φ = 1 ∧
+      ψ = fun ij => ∑ a, φ (ij.1.1, a) * U (ij.1.2, ij.2) a := by
+  let ψ' : d × (b × k) → ℂ := fun ij => ψ ((ij.1, ij.2.1), ij.2.2)
+  have hψ' : ψ' ⬝ᵥ star ψ' = 1 := by
+    simpa [ψ', dotProduct, Fintype.sum_prod_type, Finset.sum_product] using hψ
+  obtain ⟨φ, U, hU, hφ, hcomp⟩ :=
+    pure_state_compression_to_product_ancilla_with_isometry
+      (d := d) (b := b) (k := k) hcard ψ' hψ'
+  refine ⟨φ, U, hU, hφ, ?_⟩
+  funext ij
+  have hij := congrArg (fun f : d × (b × k) → ℂ => f (ij.1.1, (ij.1.2, ij.2))) hcomp
+  simpa [ψ'] using hij
+
+theorem hermitian_eigenprojector_eq_vecMulVec
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {H : Matrix n n ℂ} (hH : Matrix.IsHermitian H) (i : n) :
+    (hH.eigenvectorUnitary : Matrix n n ℂ) * Matrix.single i i (1 : ℂ) *
+        (star hH.eigenvectorUnitary : Matrix n n ℂ) =
+      Matrix.vecMulVec (⇑(hH.eigenvectorBasis i)) (star ⇑(hH.eigenvectorBasis i)) := by
+  calc
+    (hH.eigenvectorUnitary : Matrix n n ℂ) * Matrix.single i i (1 : ℂ) *
+        (star hH.eigenvectorUnitary : Matrix n n ℂ)
+      = (hH.eigenvectorUnitary : Matrix n n ℂ) *
+          Matrix.vecMulVec (Pi.single i 1) (Pi.single i 1) *
+          (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+            rw [Matrix.single_eq_single_vecMulVec_single]
+    _ = Matrix.vecMulVec ((hH.eigenvectorUnitary : Matrix n n ℂ) *ᵥ Pi.single i 1)
+          (Pi.single i 1) * (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+            rw [Matrix.mul_vecMulVec]
+    _ = Matrix.vecMulVec ((hH.eigenvectorUnitary : Matrix n n ℂ) *ᵥ Pi.single i 1)
+          ((Pi.single i 1) ᵥ* (star hH.eigenvectorUnitary : Matrix n n ℂ)) := by
+            rw [Matrix.vecMulVec_mul]
+    _ = Matrix.vecMulVec (⇑(hH.eigenvectorBasis i))
+          ((Pi.single i 1) ᵥ* (star hH.eigenvectorUnitary : Matrix n n ℂ)) := by
+            rw [hH.eigenvectorUnitary_mulVec]
+    _ = Matrix.vecMulVec (⇑(hH.eigenvectorBasis i)) (star ⇑(hH.eigenvectorBasis i)) := by
+            rw [show
+              (Pi.single i 1) ᵥ* (star hH.eigenvectorUnitary : Matrix n n ℂ) =
+                star ⇑(hH.eigenvectorBasis i) by
+              ext b
+              simp]
+
+theorem densityState_eigenvalues_sum_one
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {ρ : Matrix n n ℂ} (hρ : IsDensityState ρ) :
+    ∑ i : n, hρ.1.isHermitian.eigenvalues i = 1 := by
+  let hH : Matrix.IsHermitian ρ := hρ.1.isHermitian
+  have hre := congrArg Complex.re hρ.2
+  simpa [hH.trace_eq_sum_eigenvalues] using hre
+
+theorem densityState_eigenprojector_isDensity
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {ρ : Matrix n n ℂ} (hρ : IsDensityState ρ) (i : n) :
+    IsDensityState
+      (Matrix.vecMulVec (⇑(hρ.1.isHermitian.eigenvectorBasis i))
+        (star ⇑(hρ.1.isHermitian.eigenvectorBasis i))) := by
+  let ψ : n → ℂ := ⇑(hρ.1.isHermitian.eigenvectorBasis i)
+  refine ⟨?_, ?_⟩
+  · simpa [ψ] using Matrix.posSemidef_vecMulVec_self_star ψ
+  · rw [Matrix.trace_vecMulVec]
+    have hsq :
+        ∑ x, Complex.normSq (ψ x) = (1 : ℝ) := by
+      calc
+        ∑ x, Complex.normSq (ψ x) = ∑ x, ‖ψ x‖ ^ 2 := by
+          simp [Complex.normSq_eq_norm_sq]
+        _ = ‖hρ.1.isHermitian.eigenvectorBasis i‖ ^ 2 := by
+          symm
+          simpa [ψ] using
+            (EuclideanSpace.norm_sq_eq (hρ.1.isHermitian.eigenvectorBasis i))
+        _ = 1 := by
+          simp [hρ.1.isHermitian.eigenvectorBasis.orthonormal.norm_eq_one i]
+    calc
+      ψ ⬝ᵥ star ψ = (∑ x, Complex.normSq (ψ x) : ℂ) := by
+        simp [dotProduct, Complex.mul_conj]
+      _ = 1 := by
+        exact_mod_cast hsq
+
+theorem hermitian_spectral_decomposition
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {H : Matrix n n ℂ} (hH : Matrix.IsHermitian H) :
+    H = ∑ i : n, ((hH.eigenvalues i : ℝ) : ℂ) •
+      Matrix.vecMulVec (⇑(hH.eigenvectorBasis i)) (star ⇑(hH.eigenvectorBasis i)) := by
+  calc
+    H = (hH.eigenvectorUnitary : Matrix n n ℂ) *
+          Matrix.diagonal (fun i => ((hH.eigenvalues i : ℝ) : ℂ)) *
+          (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+            simpa [Unitary.conjStarAlgAut_apply, Matrix.mul_assoc] using hH.spectral_theorem
+    _ = (hH.eigenvectorUnitary : Matrix n n ℂ) *
+          (∑ i : n, Matrix.single i i (((hH.eigenvalues i : ℝ) : ℂ))) *
+          (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+            rw [← Matrix.sum_single_eq_diagonal]
+    _ = ∑ i : n,
+          ((hH.eigenvectorUnitary : Matrix n n ℂ) *
+            Matrix.single i i (((hH.eigenvalues i : ℝ) : ℂ)) *
+            (star hH.eigenvectorUnitary : Matrix n n ℂ)) := by
+          simp [Finset.mul_sum, Finset.sum_mul, Matrix.mul_assoc]
+    _ = ∑ i : n, ((hH.eigenvalues i : ℝ) : ℂ) •
+          ((hH.eigenvectorUnitary : Matrix n n ℂ) * Matrix.single i i (1 : ℂ) *
+            (star hH.eigenvectorUnitary : Matrix n n ℂ)) := by
+          apply Finset.sum_congr rfl
+          intro i hi
+          calc
+            (hH.eigenvectorUnitary : Matrix n n ℂ) *
+                Matrix.single i i (((hH.eigenvalues i : ℝ) : ℂ)) *
+                (star hH.eigenvectorUnitary : Matrix n n ℂ)
+              = (hH.eigenvectorUnitary : Matrix n n ℂ) *
+                  ((((hH.eigenvalues i : ℝ) : ℂ)) • Matrix.single i i (1 : ℂ)) *
+                  (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+                    simp [Matrix.smul_single]
+            _ = (((hH.eigenvalues i : ℝ) : ℂ) •
+                  ((hH.eigenvectorUnitary : Matrix n n ℂ) * Matrix.single i i (1 : ℂ))) *
+                  (star hH.eigenvectorUnitary : Matrix n n ℂ) := by
+                    rw [Matrix.mul_smul]
+            _ = ((hH.eigenvalues i : ℝ) : ℂ) •
+                  ((hH.eigenvectorUnitary : Matrix n n ℂ) * Matrix.single i i (1 : ℂ) *
+                    (star hH.eigenvectorUnitary : Matrix n n ℂ)) := by
+                    rw [Matrix.smul_mul]
+    _ = ∑ i : n, ((hH.eigenvalues i : ℝ) : ℂ) •
+          Matrix.vecMulVec (⇑(hH.eigenvectorBasis i)) (star ⇑(hH.eigenvectorBasis i)) := by
+          apply Finset.sum_congr rfl
+          intro i hi
+          rw [hermitian_eigenprojector_eq_vecMulVec hH i]
+
+theorem densityState_spectral_decomposition
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {ρ : Matrix n n ℂ} (hρ : IsDensityState ρ) :
+    ρ = ∑ i : n, ((hρ.1.isHermitian.eigenvalues i : ℝ) : ℂ) •
+      Matrix.vecMulVec (⇑(hρ.1.isHermitian.eigenvectorBasis i))
+        (star ⇑(hρ.1.isHermitian.eigenvectorBasis i)) := by
+  exact hermitian_spectral_decomposition hρ.1.isHermitian
+
+theorem densityState_convex_eigenprojector_decomposition
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {ρ : Matrix n n ℂ} (hρ : IsDensityState ρ) :
+    (∀ i, 0 ≤ hρ.1.isHermitian.eigenvalues i) ∧
+      (∑ i : n, hρ.1.isHermitian.eigenvalues i = 1) ∧
+      ρ = ∑ i : n, ((hρ.1.isHermitian.eigenvalues i : ℝ) : ℂ) •
+        Matrix.vecMulVec (⇑(hρ.1.isHermitian.eigenvectorBasis i))
+          (star ⇑(hρ.1.isHermitian.eigenvectorBasis i)) := by
+  refine ⟨?_, densityState_eigenvalues_sum_one hρ, densityState_spectral_decomposition hρ⟩
+  intro i
+  exact hρ.1.eigenvalues_nonneg i
+
+theorem isHermitian_sum
+    {ι : Type*} [DecidableEq ι] {n : Type u} [Fintype n] [DecidableEq n]
+    (s : Finset ι) (A : ι → Matrix n n ℂ)
+    (hA : ∀ i ∈ s, Matrix.IsHermitian (A i)) :
+    Matrix.IsHermitian (s.sum A) := by
+  classical
+  revert hA
+  refine Finset.induction_on s ?_ ?_
+  · intro hA
+    simp
+  · intro a s ha ih hA
+    have haHerm : Matrix.IsHermitian (A a) := hA a (Finset.mem_insert_self a s)
+    have hsHerm : Matrix.IsHermitian (s.sum A) := by
+      exact ih (fun i hi => hA i (Finset.mem_insert_of_mem hi))
+    simpa [Finset.sum_insert ha] using haHerm.add hsHerm
+
+set_option maxHeartbeats 4000000 in
+-- The induction over finite sums of matrix-valued Hermitian terms triggers expensive
+-- elaboration in the nested `Finset.sum` goals.
+theorem traceNormOp_sum_le_of_hermitian
+    {ι : Type*} [DecidableEq ι] {n : Type u} [Fintype n] [DecidableEq n]
+    (s : Finset ι) (A : ι → Matrix n n ℂ)
+    (hA : ∀ i ∈ s, Matrix.IsHermitian (A i)) :
+    traceNormOp (s.sum A) ≤ s.sum (fun i => traceNormOp (A i)) := by
+  classical
+  revert hA
+  refine Finset.induction_on s ?_ ?_
+  · intro hA
+    have hzero : traceNormOp (0 : Matrix n n ℂ) = 0 := (traceNormOp_eq_zero_iff).2 rfl
+    simpa [hzero]
+  · intro a s ha ih hA
+    have haHerm : Matrix.IsHermitian (A a) := hA a (by simp [ha])
+    have hsHerm : Matrix.IsHermitian (s.sum A) :=
+      isHermitian_sum s A (fun i hi => hA i (by simp [hi]))
+    have hsBound :
+        traceNormOp (s.sum A) ≤ s.sum (fun i => traceNormOp (A i)) := by
+      exact ih (fun i hi => hA i (by simp [hi]))
+    rw [Finset.sum_insert ha]
+    calc
+      traceNormOp (A a + s.sum A) ≤ traceNormOp (A a) + traceNormOp (s.sum A) :=
+        traceNormOp_add_le_of_hermitian haHerm hsHerm
+      _ ≤ traceNormOp (A a) + s.sum (fun i => traceNormOp (A i)) := by
+            simpa [add_comm, add_left_comm, add_assoc] using
+              add_le_add_left hsBound (traceNormOp (A a))
+      _ = (insert a s).sum (fun i => traceNormOp (A i)) := by
+            simp [Finset.sum_insert, ha]
+
+set_option maxHeartbeats 4000000 in
+-- The trace-norm extremizer argument for Hermitian matrices introduces substantial
+-- elaboration around spectral data and unitary witnesses.
+theorem traceNormOp_real_smul_of_hermitian
+    {n : Type u} [Fintype n] [DecidableEq n]
+    {H : Matrix n n ℂ} (hH : Matrix.IsHermitian H)
+    {r : ℝ} (hr : 0 ≤ r) :
+    traceNormOp ((r : ℂ) • H) = r * traceNormOp H := by
+  have hsmulH : Matrix.IsHermitian ((r : ℂ) • H) := by
+    change (((r : ℂ) • H)ᴴ = (r : ℂ) • H)
+    ext i j
+    have hij : star (H j i) = H i j := by
+      exact congrArg (fun M : Matrix n n ℂ => M i j) hH.eq
+    change star (((r : ℂ) * H j i)) = (r : ℂ) * H i j
+    simp [hij, mul_comm]
+  obtain ⟨U, hU, hmax⟩ := exists_unitary_trace_real_eq_traceNorm hH
+  obtain ⟨Ur, hUr, hmaxr⟩ := exists_unitary_trace_real_eq_traceNorm hsmulH
+  have hscale_trace :
+      ∀ W : Matrix n n ℂ,
+        Complex.re (Matrix.trace (W * ((r : ℂ) • H))) =
+          r * Complex.re (Matrix.trace (W * H)) := by
+    intro W
+    rw [Matrix.mul_smul, Matrix.trace_smul]
+    simp [Complex.mul_re, mul_comm, mul_left_comm, mul_assoc]
+  apply le_antisymm
+  · calc
+      traceNormOp ((r : ℂ) • H)
+          = Complex.re (Matrix.trace (Ur * ((r : ℂ) • H))) := hmaxr.symm
+      _ = r * Complex.re (Matrix.trace (Ur * H)) := hscale_trace Ur
+      _ ≤ r * traceNormOp H := by
+            exact mul_le_mul_of_nonneg_left
+              (hermitian_unitary_trace_real_le_traceNorm hH hUr) hr
+  · calc
+      r * traceNormOp H = r * Complex.re (Matrix.trace (U * H)) := by rw [hmax]
+      _ = Complex.re (Matrix.trace (U * ((r : ℂ) • H))) := by
+            rw [hscale_trace U]
+      _ ≤ traceNormOp ((r : ℂ) • H) := by
+            exact hermitian_unitary_trace_real_le_traceNorm hsmulH hU
+
+set_option maxHeartbeats 4000000 in
+-- Reducing mixed-state bounds to pure-state bounds requires a spectral decomposition,
+-- finite-sum trace-norm control, and coefficient bookkeeping in one proof.
+theorem traceNormOp_le_of_densityState_pure_bound
+    {n : Type u} [Fintype n] [DecidableEq n]
+    (Ψ : Channel n) (hΨ : IsHermiticityPreserving Ψ) (b : ℝ)
+    (hbound :
+      ∀ ψ : n → ℂ, ψ ⬝ᵥ star ψ = 1 →
+        traceNormOp (Ψ (Matrix.vecMulVec ψ (star ψ))) ≤ b)
+    {ρ : Matrix n n ℂ} (hρ : IsDensityState ρ) :
+    traceNormOp (Ψ ρ) ≤ b := by
+  let eig : n → ℝ := hρ.1.isHermitian.eigenvalues
+  let P : n → Matrix n n ℂ := fun i =>
+    Matrix.vecMulVec (⇑(hρ.1.isHermitian.eigenvectorBasis i))
+      (star ⇑(hρ.1.isHermitian.eigenvectorBasis i))
+  have hρdecomp :
+      ρ = ∑ i : n, ((eig i : ℝ) : ℂ) • P i := by
+    simpa [eig, P] using densityState_spectral_decomposition hρ
+  have hsum :
+      traceNormOp (Ψ ρ) ≤ ∑ i : n, traceNormOp (((eig i : ℂ) • Ψ (P i))) := by
+    rw [hρdecomp, map_sum]
+    simp_rw [map_smul]
+    refine traceNormOp_sum_le_of_hermitian Finset.univ (fun i => ((eig i : ℂ) • Ψ (P i))) ?_
+    intro i hi
+    have hPi : IsDensityState (P i) := by
+      simpa [P] using densityState_eigenprojector_isDensity hρ i
+    have hΨPi : Matrix.IsHermitian (Ψ (P i)) := by
+      simpa [hΨ (P i)] using congrArg Ψ hPi.1.isHermitian.eq
+    have hscaled : Matrix.IsHermitian (((eig i : ℂ) • Ψ (P i))) := by
+      change ((((eig i : ℂ) • Ψ (P i))ᴴ) = ((eig i : ℂ) • Ψ (P i)))
+      ext a b
+      have hab : star (Ψ (P i) b a) = Ψ (P i) a b := by
+        exact congrArg (fun M : Matrix n n ℂ => M a b) hΨPi
+      change star (((eig i : ℂ) * Ψ (P i) b a)) = (eig i : ℂ) * Ψ (P i) a b
+      simp [hab, mul_comm]
+    simpa [eig] using hscaled
+  calc
+    traceNormOp (Ψ ρ) ≤ ∑ i : n, traceNormOp (((eig i : ℂ) • Ψ (P i))) := hsum
+    _ = ∑ i : n, eig i * traceNormOp (Ψ (P i)) := by
+      apply Finset.sum_congr rfl
+      intro i hi
+      have hPi : IsDensityState (P i) := by
+        simpa [P] using densityState_eigenprojector_isDensity hρ i
+      have hΨPi : Matrix.IsHermitian (Ψ (P i)) := by
+        simpa [hΨ (P i)] using congrArg Ψ hPi.1.isHermitian.eq
+      rw [traceNormOp_real_smul_of_hermitian hΨPi (hρ.1.eigenvalues_nonneg i)]
+    _ ≤ ∑ i : n, eig i * b := by
+      apply Finset.sum_le_sum
+      intro i hi
+      have heig : 0 ≤ eig i := by
+        simpa [eig] using hρ.1.eigenvalues_nonneg i
+      have hψnorm :
+          (⇑(hρ.1.isHermitian.eigenvectorBasis i)) ⬝ᵥ
+              star ⇑(hρ.1.isHermitian.eigenvectorBasis i) = 1 := by
+        simpa [P, Matrix.trace_vecMulVec] using (densityState_eigenprojector_isDensity hρ i).2
+      exact mul_le_mul_of_nonneg_left
+        (hbound _ hψnorm) heig
+    _ = b := by
+      rw [← Finset.sum_mul]
+      simp [eig, densityState_eigenvalues_sum_one hρ]
 
 /-- Background pure-state form of Uhlmann's theorem. -/
 theorem uhlmann_theorem_pure
@@ -1794,18 +2618,7 @@ theorem uhlmann_theorem_pure
         partialTraceLeft d d (Matrix.vecMulVec φ (star φ))) :
     ∃ U : Matrix d d ℂ, Uᴴ * U = 1 ∧
       φ = fun ij => ∑ a, U ij.1 a * ψ (a, ij.2) := by
-  let A : Matrix d d ℂ := fun i j => ψ (i, j)
-  let B : Matrix d d ℂ := fun i j => φ (i, j)
-  have hredAB :
-      partialTraceLeft d d (Matrix.vecMulVec (vecKetGen A) (star (vecKetGen A))) =
-        partialTraceLeft d d (Matrix.vecMulVec (vecKetGen B) (star (vecKetGen B))) := by
-    simpa [A, B, vecKetGen] using hred
-  have hGram : Aᴴ * A = Bᴴ * B := (partialTraceLeft_vecMulVec_eq_iff.mp hredAB)
-  obtain ⟨U, hU, hBA⟩ := uhlmann_matrix_factor hGram
-  refine ⟨U, hU, ?_⟩
-  funext ij
-  have hij := congrArg (fun M : Matrix d d ℂ => M ij.1 ij.2) hBA
-  simpa [A, B, Matrix.mul_apply] using hij
+  exact uhlmann_theorem_pure_rect ψ φ hred
 
 set_option maxHeartbeats 1000000 in
 -- The spectral argument below needs a larger heartbeat budget.
@@ -2209,3 +3022,57 @@ theorem sqrt_card_prod_self
 
 end
 end Diamond
+
+-- AUTO_AXIOM_CHECK_MARKER_DO_NOT_COMMIT
+#print axioms Diamond.trNorm_nonneg
+#print axioms Diamond.hsNorm_nonneg
+#print axioms Diamond.hsNormOp_eq_zero_iff
+#print axioms Diamond.traceNormOp_eq_zero_iff
+#print axioms Diamond.quantumChannel_has_kraus
+#print axioms Diamond.tensorWithIdentity_comp_transpose
+#print axioms Diamond.idMinus_isHermiticityPreserving
+#print axioms Diamond.idMinus_isTraceAnnihilating
+#print axioms Diamond.adMap_isQuantumChannel
+#print axioms Diamond.quantumChannel_maps_posSemidef
+#print axioms Diamond.traceNormOp_neg
+#print axioms Diamond.diamond_le_of_pointwise
+#print axioms Diamond.diamond_le_of_pointwise_nonempty
+#print axioms Diamond.traceNorm_apply_le_diamond
+#print axioms Diamond.lemma_transpose_diamond
+#print axioms Diamond.unitary_channel_diamond_distance_eq_two_of_trace_zero
+#print axioms Diamond.trace_Ud_eq_zero
+#print axioms Diamond.traceNormOp_add_le_of_hermitian
+#print axioms Diamond.transpose_triangle_of_hermiticityPreserving
+#print axioms Diamond.transpose_triangle_of_quantumChannel
+#print axioms Diamond.traceNormOp_quantumChannel_le_of_hermitian
+#print axioms Diamond.traceNormOp_sub_le_of_quantumChannel
+#print axioms Diamond.exists_maximizing_state
+#print axioms Diamond.rank_two_traceless_hermitian_decomposition
+#print axioms Diamond.uhlmann_theorem_pure_rect
+#print axioms Diamond.uhlmann_theorem_pure_right
+#print axioms Diamond.uhlmann_theorem_pure_right_le
+#print axioms Diamond.exists_canonical_purification
+#print axioms Diamond.pure_state_compression_to_input_dim
+#print axioms Diamond.pure_state_compression_to_input_dim_with_isometry
+#print axioms Diamond.pure_state_expansion_to_input_dim_with_isometry
+#print axioms Diamond.card_le_card_prod_right
+#print axioms Diamond.pure_state_compression_to_product_ancilla_with_isometry
+#print axioms Diamond.pure_state_nested_product_compression_with_isometry
+#print axioms Diamond.hermitian_eigenprojector_eq_vecMulVec
+#print axioms Diamond.densityState_eigenvalues_sum_one
+#print axioms Diamond.densityState_eigenprojector_isDensity
+#print axioms Diamond.hermitian_spectral_decomposition
+#print axioms Diamond.densityState_spectral_decomposition
+#print axioms Diamond.densityState_convex_eigenprojector_decomposition
+#print axioms Diamond.isHermitian_sum
+#print axioms Diamond.traceNormOp_sum_le_of_hermitian
+#print axioms Diamond.traceNormOp_real_smul_of_hermitian
+#print axioms Diamond.traceNormOp_le_of_densityState_pure_bound
+#print axioms Diamond.uhlmann_theorem_pure
+#print axioms Diamond.unitary_diagonalization
+#print axioms Diamond.asymptotic_cotangent_lower_bound
+#print axioms Diamond.trace_eq_trace_partialTraceLeft
+#print axioms Diamond.partialTraceLeft_tensor_zero
+#print axioms Diamond.tensorWithIdentity_trace_zero
+#print axioms Diamond.tensorWithIdentity_hermitian
+#print axioms Diamond.sqrt_card_prod_self

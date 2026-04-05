@@ -26,40 +26,31 @@ theorem traceNorm_apply_le_diamond
   ...
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. Rename `tensorWithIdentity d k Φ` to a single map `Ψ`.
-2. Bound `Ψ X` in Hilbert--Schmidt norm by a finite-dimensional operator constant built from the
-   images of matrix basis elements.
-3. Use `lemma2` to pass from trace norm to Hilbert--Schmidt norm.
-4. Use the density-state estimate `‖ρ‖₂ ≤ 1` to remove dependence on the chosen witness.
-5. Conclude with the definition of `diamondNormAt` as a supremum over all density states.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-This is the formal version of the obvious supremum inequality:
+## Proof / Construction Shape
 
-- one particular test state gives one candidate value in the defining set for `diamondNormAt`,
-- so its trace norm can never exceed the supremum.
+Most declarations in this repository follow the same pattern:
 
-The Lean proof is longer only because it makes the boundedness of the stabilized map explicit.
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-## Dependencies and downstream use
+## Lean Cues
 
-### Earlier declarations this depends on
-- [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
-- [`DensityState`](../Setups/DensityState.md) from `Setups.lean`
-- [`tensorWithIdentity`](../Setups/tensorWithIdentity.md) from `Setups.lean`
-- [`diamondNormAt`](../Setups/diamondNormAt.md) from `Setups.lean`
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-### Later declarations that use this one
-- [`theorem1`](../Theorem/Theorem1/theorem1.md) in `Theorem/Theorem1.lean`
-- [`remark1`](../Theorem/Remark1/remark1.md) in `Theorem/Remark1.lean`
-- [`theorem_not_tight`](../PositiveGap/NotTight/theorem_not_tight.md) in `PositiveGap/NotTight.lean`
-- [`theorem_eq7_witness_bound`](../EndMatter/Eq7/theorem_eq7_witness_bound.md) in `EndMatter/Eq7.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

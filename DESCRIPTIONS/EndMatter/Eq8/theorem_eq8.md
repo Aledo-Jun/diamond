@@ -1,93 +1,64 @@
 # theorem_eq8
 
-## Source location
+## Source
 
-- Original Lean file: `Diamond/EndMatter/Eq8.lean`
-- Declaration name: `theorem_eq8`
-- Declaration kind: `theorem`
+- Lean file: `Diamond/EndMatter/Eq8.lean`
+- Declaration: `Diamond.EndMatter.Eq8.theorem_eq8`
 
-## Why this declaration exists
+## Statement
 
-This theorem proves the paper's Eq. (8), namely that the diamond distance between the identity and the special unitary channel is exactly $2$.
+For the phase unitary \(U_d\),
 
- In the file `EndMatter/Eq8.lean`, it contributes to the proof of Eq. (8) and the lower bound on the universal constant. Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
+$$
+\|\mathrm{id} - \mathrm{Ad}_{U_d}\|_\diamond = 2.
+$$
 
-## Original code
+## Meaning
 
-```lean
-/-- Paper Eq. (8): the unitary channel `Ad_{U_d}` sits at diamond distance `2`
-    from the identity. -/
-theorem theorem_eq8 (d : ℕ) [Fact (1 < d)] :
-    diamondOp (idMinus (adMap (Fin d) (Ud d))) = 2 := by
-  exact unitary_channel_diamond_distance_eq_two_of_trace_zero
-    (U := Ud d) (hU := ud_conjTranspose_mul_self d) (htrace := trace_Ud_eq_zero d)
-```
+The channel \(\mathrm{Ad}_{U_d}\) is unitary conjugation by \(U_d\). This theorem says that its
+diamond distance from the identity channel is exactly maximal in the scale relevant to the paper.
 
-## Block-by-block explanation
+## Proof Structure
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+The proof is short because the heavy lifting already lives in `StandardFacts.lean`.
 
-1. Code:
-```lean
-/-- Paper Eq. (8): the unitary channel `Ad_{U_d}` sits at diamond distance `2`
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+### 1. Identify the channel
 
-2. Code:
-```lean
-    from the identity. -/
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+The channel in question is
 
-3. Code:
-```lean
-theorem theorem_eq8 (d : ℕ) [Fact (1 < d)] :
-```
-This line starts the `theorem_eq8` declaration. Because it begins with `theorem`, Lean now knows what kind of named object is being introduced.
+$$
+\mathrm{Ad}_{U_d}(X) = U_d X U_d^\dagger.
+$$
 
-4. Code:
-```lean
-    diamondOp (idMinus (adMap (Fin d) (Ud d))) = 2 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
+The object compared to the identity is therefore
 
-5. Code:
-```lean
-  exact unitary_channel_diamond_distance_eq_two_of_trace_zero
-```
-This line finishes the current goal by giving Lean the exact theorem, lemma, or term that proves it.
+$$
+\mathrm{id} - \mathrm{Ad}_{U_d}.
+$$
 
-6. Code:
-```lean
-    (U := Ud d) (hU := ud_conjTranspose_mul_self d) (htrace := trace_Ud_eq_zero d)
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+### 2. Verify the unitary hypotheses
 
-## Mathematical summary
+The project already proves:
 
-Restated without Lean syntax, `theorem_eq8` is the theorem or lemma written above.
+- \(U_d^\dagger U_d = I\),
+- \(\operatorname{tr}(U_d) = 0\).
 
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
+These are exactly the assumptions needed by the general unitary-channel distance formula proved
+earlier in the repository.
 
-## Dependencies and downstream use
+### 3. Apply the general formula
 
-### Earlier declarations this depends on
-- [`diamondOp`](../../Setups/diamondOp.md) from `Setups.lean`
-- [`idMinus`](../../Setups/idMinus.md) from `Setups.lean`
-- [`adMap`](../../Setups/adMap.md) from `Setups.lean`
-- [`Ud`](../../Setups/Ud.md) from `Setups.lean`
-- [`unitary_channel_diamond_distance_eq_two_of_trace_zero`](../../StandardFacts/unitary_channel_diamond_distance_eq_two_of_trace_zero.md) from `StandardFacts.lean`
-- [`trace_Ud_eq_zero`](../../StandardFacts/trace_Ud_eq_zero.md) from `StandardFacts.lean`
-- [`ud_conjTranspose_mul_self`](../Eq7/ud_conjTranspose_mul_self.md) from `EndMatter/Eq7.lean`
+The final step is an application of the background theorem stating that if \(U\) is unitary and
+\(\operatorname{tr}(U)=0\), then
 
-### Later declarations that use this one
-- [`alpha_lower_bound`](alpha_lower_bound.md) in `EndMatter/Eq8.lean`
+$$
+\|\mathrm{id} - \mathrm{Ad}_U\|_\diamond = 2.
+$$
 
-## Backlinks
+Substituting \(U = U_d\) gives the result immediately.
 
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `EndMatter/Eq8.lean` section in the index](../../INDEX.md#diamond-endmatter-eq8-lean)
-- [Next declaration in this file](alpha_lower_bound.md)
+## Why This Theorem Matters
+
+Eq. (8) supplies the exact value needed to compare the upper and lower bounds in the endmatter.
+Together with Eq. (7), it turns the abstract norm inequality into a quantitative constraint on
+the universal constant.

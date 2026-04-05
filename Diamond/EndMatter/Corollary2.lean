@@ -1,4 +1,5 @@
-import Diamond.Theorem.Remark1
+import Diamond.HolevoWerner.Theorem
+import Diamond.HolevoWerner.TensorPower
 
 open scoped BigOperators
 open scoped ComplexOrder
@@ -13,22 +14,360 @@ universe u
 
 noncomputable section
 
-/-- A finite-dimensional superoperator between possibly different input/output spaces. -/
-abbrev Superoperator
-    (din dout : Type u) [Fintype din] [DecidableEq din] [Fintype dout] [DecidableEq dout] :=
-  Matrix din din ℂ →ₗ[ℂ] Matrix dout dout ℂ
-
-/-- The effective message-space channel induced by encoder, `m` channel uses,
-    and decoder. -/
-abbrev effectiveChannel
+/-- Paper Corollary 2 in packaged form: a quantum coding scheme with the finite-error
+Holevo-Werner code data satisfies the improved transposition converse. This theorem
+uses the explicit Holevo-Werner theorem/replacement chain from
+`Diamond.HolevoWerner.Theorem`. -/
+theorem corollary2_linear_bound_of_quantum_coding_scheme
     {phys msg : Type u}
-    [Fintype phys] [DecidableEq phys] [Fintype msg] [DecidableEq msg]
-    (encoder : Superoperator msg phys)
-    (decoder : Superoperator phys msg)
-    (tensorPower : Channel phys) : Channel msg :=
-  decoder.comp (tensorPower.comp encoder)
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hdata : HolevoWernerCodeData scheme T m ε) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact holevo_werner_improved_linear_bound hdata
 
-/-- The linear estimate underlying the improved Holevo-Werner finite-error converse. -/
+/-- Packaged linear corollary from the decoder-reduced remaining assumption.
+This is the cleanest corollary-level entry point currently available in the repo
+for the final coding statement. -/
+theorem corollary2_linear_bound_of_decoder_reduction
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hred : ReducedTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_decoder_reduction hred herror)
+
+/-- Packaged linear corollary from the post-encoder pointwise bound for the
+ancilla-extended transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_post_encoder_reduction
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hpost : PostEncoderTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_post_encoder_reduction hpost herror)
+
+/-- Packaged linear corollary from the pure-state post-encoder pointwise bound for the
+ancilla-extended transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_pure_state_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hpure : PostEncoderPureTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_pure_state_bound hpure herror)
+
+/-- Large-ancilla specialization: when `Fintype.card phys ≤ Fintype.card msg`, the corollary
+already follows from the ordinary `diamondOp` bound on the transposed physical middle channel
+by compressing pure witnesses down to ancilla `phys`. -/
+theorem corollary2_linear_bound_of_diamondOp_bound_card_le
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card phys ≤ Fintype.card msg)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound_card_le hcard hbound herror)
+
+/-- Small-ancilla specialization: when `Fintype.card msg ≤ Fintype.card phys`, the corollary
+already follows from the ordinary `diamondOp` bound on the transposed physical middle channel
+by expanding pure witnesses up to ancilla `phys`. -/
+theorem corollary2_linear_bound_of_diamondOp_bound_card_ge
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card msg ≤ Fintype.card phys)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound_card_ge hcard hbound herror)
+
+/-- Unconditional corollary-level reduction from the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound hbound herror)
+
+/-- Packaged linear corollary from the fixed-ancilla `diamondNormAt` bound on the
+transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_diamondAt_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound : PostEncoderDiamondAtBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondAt_bound hbound herror)
+
+/-- Same-dimension specialization: when the message type is literally the physical input
+type, the remaining fixed-ancilla bound is just the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_diamondOp_bound_same_type
+    {phys : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    {scheme : QuantumCodingScheme phys phys}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card phys : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_diamondAt_bound
+    (PostEncoderDiamondAtBoundData.of_diamondOp_bound_same_type hbound) herror
+
+/-- Equal-cardinality specialization: when the message type has the same cardinality as
+the physical input type, the remaining fixed-ancilla bound reduces to the ordinary
+`diamondOp` bound on the transposed physical middle channel. -/
+theorem corollary2_linear_bound_of_diamondOp_bound_card_eq
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card msg = Fintype.card phys)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective)) :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_diamondAt_bound
+    (Diamond.PostEncoderDiamondAtBoundData.of_diamondOp_bound_card_eq hcard hbound) herror
+
+/-- Paper Corollary 2 in packaged form: a quantum coding scheme with the finite-error
+Holevo-Werner code data satisfies the improved transposition converse. This theorem
+uses the explicit Holevo-Werner theorem/replacement chain from
+`Diamond.HolevoWerner.Theorem`. -/
+theorem corollary2_of_quantum_coding_scheme
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hdata : HolevoWernerCodeData scheme T m ε)
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact holevo_werner_improved_bound hdata hm hε
+
+/-- Packaged logarithmic corollary from the decoder-reduced remaining assumption.
+This theorem exposes the exact reduced bound that still needs to be discharged for a
+fully unconditional verification of Corollary 2. -/
+theorem corollary2_of_decoder_reduction
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hred : ReducedTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_decoder_reduction hred herror) hm hε
+
+/-- Packaged logarithmic corollary from the post-encoder pointwise bound for the
+ancilla-extended transposed physical middle channel. -/
+theorem corollary2_of_post_encoder_reduction
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hpost : PostEncoderTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_post_encoder_reduction hpost herror) hm hε
+
+/-- Packaged logarithmic corollary from the pure-state post-encoder pointwise bound for the
+ancilla-extended transposed physical middle channel. -/
+theorem corollary2_of_pure_state_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty msg]
+    [Fintype msg] [DecidableEq msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hpure : PostEncoderPureTransposeCodeBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_pure_state_bound hpure herror) hm hε
+
+/-- Large-ancilla specialization of Corollary 2 from the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_of_diamondOp_bound_card_le
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card phys ≤ Fintype.card msg)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound_card_le hcard hbound herror) hm hε
+
+/-- Small-ancilla specialization of Corollary 2 from the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_of_diamondOp_bound_card_ge
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card msg ≤ Fintype.card phys)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound_card_ge hcard hbound herror) hm hε
+
+/-- Unconditional corollary-level reduction from the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_of_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondOp_bound hbound herror) hm hε
+
+/-- Packaged logarithmic corollary from the fixed-ancilla `diamondNormAt` bound on the
+transposed physical middle channel. -/
+theorem corollary2_of_diamondAt_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound : PostEncoderDiamondAtBoundData scheme T m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_quantum_coding_scheme
+    (HolevoWernerCodeData.of_diamondAt_bound hbound herror) hm hε
+
+/-- Same-dimension specialization of Corollary 2 from the ordinary `diamondOp` bound on the
+transposed physical middle channel. -/
+theorem corollary2_of_diamondOp_bound_same_type
+    {phys : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    {scheme : QuantumCodingScheme phys phys}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card phys : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_diamondAt_bound
+    (PostEncoderDiamondAtBoundData.of_diamondOp_bound_same_type hbound)
+    herror hm hε
+
+/-- Equal-cardinality specialization of Corollary 2 from the ordinary `diamondOp` bound
+on the transposed physical middle channel. -/
+theorem corollary2_of_diamondOp_bound_card_eq
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    {scheme : QuantumCodingScheme phys msg}
+    {T : Channel phys} {m : ℕ} {ε : ℝ}
+    (hcard : Fintype.card msg = Fintype.card phys)
+    (hbound :
+      diamondOp ((transposeMap phys).comp scheme.tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror : ε = (1 / 2 : ℝ) * diamondOp (idMinus scheme.effective))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_diamondAt_bound
+    (Diamond.PostEncoderDiamondAtBoundData.of_diamondOp_bound_card_eq hcard hbound)
+    herror hm hε
+
+/-- The linear estimate underlying the improved Holevo-Werner finite-error converse.
+This endmatter wrapper now delegates to the explicit Holevo-Werner theorem chain. -/
 theorem corollary2_linear_bound
     {phys msg : Type u}
     [Fintype phys] [DecidableEq phys]
@@ -40,13 +379,6 @@ theorem corollary2_linear_bound
     (ε : ℝ)
     (heffective :
       IsQuantumChannel (effectiveChannel encoder decoder tensorPower))
-    (htranspose_triangle :
-      diamondOp (transposeMap msg) ≤
-        diamondOp
-          ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) +
-            diamondOp
-              ((transposeMap msg).comp
-                (idMinus (effectiveChannel encoder decoder tensorPower))))
     (htranspose_code_bound :
       diamondOp
           ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) ≤
@@ -57,69 +389,51 @@ theorem corollary2_linear_bound
           diamondOp (idMinus (effectiveChannel encoder decoder tensorPower))) :
     (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
       (diamondOp ((transposeMap phys).comp T)) ^ m := by
-  let effective := effectiveChannel encoder decoder tensorPower
-  have hrem :=
-    remark1 (d := msg) (Ψ := idMinus effective)
-      (hH := idMinus_isHermiticityPreserving effective heffective)
-      (hT := idMinus_isTraceAnnihilating effective heffective)
-  have hsqrt2_ne : Real.sqrt 2 ≠ 0 := by positivity
-  have herror_eq : diamondOp (idMinus effective) = 2 * ε := by
-    nlinarith [herror]
-  have herror_bound :
-      diamondOp ((transposeMap msg).comp (idMinus effective)) ≤
-        Real.sqrt 2 * (Fintype.card msg : ℝ) * ε := by
-    have hcard : (Fintype.card (msg × msg) : ℝ) = (Fintype.card msg : ℝ) ^ (2 : ℕ) := by
-      simp [Fintype.card_prod, Nat.cast_mul, pow_two]
-    have hsqrt_msg : Real.sqrt (Fintype.card (msg × msg) : ℝ) = (Fintype.card msg : ℝ) := by
-      calc
-        Real.sqrt (Fintype.card (msg × msg) : ℝ)
-            = Real.sqrt ((Fintype.card msg : ℝ) ^ (2 : ℕ)) := by
-              rw [hcard]
-        _ = Fintype.card msg := by
-              rw [Real.sqrt_sq_eq_abs]
-              have hnn : 0 ≤ (Fintype.card msg : ℝ) := by positivity
-              simp [abs_of_nonneg hnn]
-    calc
-      diamondOp ((transposeMap msg).comp (idMinus effective)) ≤
-          (1 / Real.sqrt 2) * diamondOp (transposeMap msg) * diamondOp (idMinus effective) :=
-        hrem
-      _ = (1 / Real.sqrt 2) * Real.sqrt (Fintype.card (msg × msg) : ℝ) * (2 * ε) := by
-        rw [transpose_diamond_exact (d := msg), herror_eq]
-      _ = (1 / Real.sqrt 2) * (Fintype.card msg : ℝ) * (2 * ε) := by
-        rw [hsqrt_msg]
-      _ = Real.sqrt 2 * (Fintype.card msg : ℝ) * ε := by
-        have hsqrt2 : 2 / Real.sqrt 2 = Real.sqrt 2 := by
-          apply (div_eq_iff hsqrt2_ne).2
-          nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
-        calc
-          (1 / Real.sqrt 2) * (Fintype.card msg : ℝ) * (2 * ε)
-              = ((2 / Real.sqrt 2) * (Fintype.card msg : ℝ)) * ε := by ring
-          _ = (Real.sqrt 2 * (Fintype.card msg : ℝ)) * ε := by rw [hsqrt2]
-          _ = Real.sqrt 2 * (Fintype.card msg : ℝ) * ε := by ring
-  have hcard : (Fintype.card (msg × msg) : ℝ) = (Fintype.card msg : ℝ) ^ (2 : ℕ) := by
-    simp [Fintype.card_prod, Nat.cast_mul, pow_two]
-  have hsqrt_msg : Real.sqrt (Fintype.card (msg × msg) : ℝ) = (Fintype.card msg : ℝ) := by
-    calc
-      Real.sqrt (Fintype.card (msg × msg) : ℝ)
-          = Real.sqrt ((Fintype.card msg : ℝ) ^ (2 : ℕ)) := by
-            rw [hcard]
-      _ = Fintype.card msg := by
-            rw [Real.sqrt_sq_eq_abs]
-            have hnn : 0 ≤ (Fintype.card msg : ℝ) := by positivity
-            simp [abs_of_nonneg hnn]
-  rw [transpose_diamond_exact (d := msg)] at htranspose_triangle
-  rw [hsqrt_msg] at htranspose_triangle
-  have hlinear :
-      (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
-        diamondOp ((transposeMap msg).comp effective) := by
-    nlinarith [htranspose_triangle, herror_bound]
-  calc
+  let hdata : HolevoWernerEffectiveData
+      (effectiveChannel encoder decoder tensorPower) T m ε :=
+    { heffective := heffective
+      htranspose_code_bound := htranspose_code_bound
+      herror := herror }
+  exact holevo_werner_improved_linear_bound_effective hdata
+
+/-- Corollary 2 from the ordinary `diamondOp` bound on the transposed `m`-use physical
+middle channel, stated directly in terms of encoder, decoder, and `tensorPower`. This is
+the sharp explicit wrapper closest to the paper's coding-scheme formulation currently in the
+repo. -/
+theorem corollary2_linear_bound_of_tensorPower_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (m : ℕ)
+    (encoder : Superoperator msg phys)
+    (decoder : Superoperator phys msg)
+    (tensorPower : Channel phys)
+    (ε : ℝ)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (htensorPower : IsQuantumChannel tensorPower)
+    (hbound :
+      diamondOp ((transposeMap phys).comp tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower))) :
     (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
-        diamondOp ((transposeMap msg).comp effective) := hlinear
-    _ ≤ (diamondOp ((transposeMap phys).comp T)) ^ m := htranspose_code_bound
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  let scheme : QuantumCodingScheme phys msg :=
+    { encoder := encoder
+      decoder := decoder
+      tensorPower := tensorPower
+      hencoder := hencoder
+      hdecoder := hdecoder
+      htensorPower := htensorPower }
+  exact corollary2_linear_bound_of_diamondOp_bound
+    (scheme := scheme) (T := T) (m := m) (ε := ε) hbound herror
 
 /-- Paper Corollary 2, stated directly in terms of encoder, decoder,
-    `m` channel uses, and the diamond-norm decoding error. -/
+`m` channel uses, and the diamond-norm decoding error. This wrapper uses the
+improved Holevo-Werner theorem proved via the explicit replacement argument. -/
 theorem corollary2
     {phys msg : Type u}
     [Fintype phys] [DecidableEq phys]
@@ -131,13 +445,6 @@ theorem corollary2
     (ε : ℝ)
     (heffective :
       IsQuantumChannel (effectiveChannel encoder decoder tensorPower))
-    (htranspose_triangle :
-      diamondOp (transposeMap msg) ≤
-        diamondOp
-          ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) +
-            diamondOp
-              ((transposeMap msg).comp
-                (idMinus (effectiveChannel encoder decoder tensorPower))))
     (htranspose_code_bound :
       diamondOp
           ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) ≤
@@ -150,59 +457,426 @@ theorem corollary2
     Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
       Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
         (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
-  let msgDim : ℝ := Fintype.card msg
-  let delta : ℝ := 1 - Real.sqrt 2 * ε
-  let bound : ℝ := diamondOp ((transposeMap phys).comp T)
-  have hlinear : delta * msgDim ≤ bound ^ m := by
-    simpa [delta, msgDim, bound] using
-      corollary2_linear_bound T m encoder decoder tensorPower ε
-        heffective htranspose_triangle htranspose_code_bound herror
-  have hm_real : 0 < (m : ℝ) := by exact_mod_cast hm
-  have hmsgDim_pos : 0 < msgDim := by
-    have hcard_pos : 0 < Fintype.card msg := Fintype.card_pos_iff.mpr inferInstance
-    simpa [msgDim] using
-      (show (0 : ℝ) < (Fintype.card msg : ℝ) from by exact_mod_cast hcard_pos)
-  have hdelta_pos : 0 < delta := by
-    have hdelta_pos' : 0 < 1 - Real.sqrt 2 * ε := by
-      have hsqrt2_pos : 0 < Real.sqrt 2 := by positivity
-      have hsqrt2_ne : Real.sqrt 2 ≠ 0 := by positivity
-      have hmul : Real.sqrt 2 * ε < 1 := by
-        calc
-          Real.sqrt 2 * ε < Real.sqrt 2 * (1 / Real.sqrt 2) := by
-            exact mul_lt_mul_of_pos_left hε hsqrt2_pos
-          _ = 1 := by
-            field_simp [hsqrt2_ne]
-      nlinarith
-    simpa [delta] using hdelta_pos'
-  have hlog :
-      Real.logb 2 (delta * msgDim) ≤ Real.logb 2 (bound ^ m) := by
-    exact Real.logb_le_logb_of_le (b := 2) (by norm_num) (mul_pos hdelta_pos hmsgDim_pos) hlinear
-  have hlog' :
-      Real.logb 2 delta + Real.logb 2 msgDim ≤ (m : ℝ) * Real.logb 2 bound := by
-    simpa [delta, msgDim, bound, Real.logb_mul (ne_of_gt hdelta_pos) (ne_of_gt hmsgDim_pos),
-      Real.logb_pow] using hlog
-  have hmain :
-      Real.logb 2 msgDim ≤
-        (m : ℝ) * Real.logb 2 bound + Real.logb 2 (1 / delta) := by
-    have htmp : Real.logb 2 msgDim ≤ (m : ℝ) * Real.logb 2 bound - Real.logb 2 delta := by
-      linarith
-    calc
-      Real.logb 2 msgDim ≤ (m : ℝ) * Real.logb 2 bound - Real.logb 2 delta := htmp
-      _ = (m : ℝ) * Real.logb 2 bound + Real.logb 2 (1 / delta) := by
-        have hlog_inv : -Real.logb 2 delta = Real.logb 2 (1 / delta) := by
-          rw [one_div]
-          exact (Real.logb_inv 2 delta).symm
-        rw [sub_eq_add_neg]
-        rw [hlog_inv]
-  refine (div_le_iff₀ hm_real).2 ?_
-  have hm_ne : (m : ℝ) ≠ 0 := by exact_mod_cast Nat.ne_of_gt hm
-  calc
-    Real.logb 2 msgDim ≤ (m : ℝ) * Real.logb 2 bound + Real.logb 2 (1 / delta) := hmain
-    _ = (Real.logb 2 bound + (1 / (m : ℝ)) * Real.logb 2 (1 / delta)) * (m : ℝ) := by
-      field_simp [hm_ne]
-    _ = (Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
-          (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε))) * (m : ℝ) := by
-      simp [delta, bound]
+  let hdata : HolevoWernerEffectiveData
+      (effectiveChannel encoder decoder tensorPower) T m ε :=
+    { heffective := heffective
+      htranspose_code_bound := htranspose_code_bound
+      herror := herror }
+  exact holevo_werner_improved_bound_effective hdata hm hε
+
+/-- Corollary 2 from the ordinary `diamondOp` bound on the transposed `m`-use physical
+middle channel, stated directly in terms of encoder, decoder, and `tensorPower`. -/
+theorem corollary2_of_tensorPower_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (m : ℕ)
+    (encoder : Superoperator msg phys)
+    (decoder : Superoperator phys msg)
+    (tensorPower : Channel phys)
+    (ε : ℝ)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (htensorPower : IsQuantumChannel tensorPower)
+    (hbound :
+      diamondOp ((transposeMap phys).comp tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  let scheme : QuantumCodingScheme phys msg :=
+    { encoder := encoder
+      decoder := decoder
+      tensorPower := tensorPower
+      hencoder := hencoder
+      hdecoder := hdecoder
+      htensorPower := htensorPower }
+  exact corollary2_of_diamondOp_bound
+    (scheme := scheme) (T := T) (m := m) (ε := ε) hbound herror hm hε
+
+/-- Paper-facing Corollary 2 wrapper for an arbitrary block coding space:
+encoder/decoder and the `m`-use physical middle channel may act on a block space distinct from
+the single-use channel space. The only remaining analytical input is the ordinary `diamondOp`
+bound on that block channel in terms of the single-use channel `T`. -/
+theorem corollary2_of_block_tensorPower_diamondOp_bound
+    {base block msg : Type u}
+    [Fintype base] [DecidableEq base]
+    [Fintype block] [DecidableEq block]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel base) (m : ℕ)
+    (encoder : Superoperator msg block)
+    (decoder : Superoperator block msg)
+    (tensorPower : Channel block)
+    (ε : ℝ)
+    (heffective :
+      IsQuantumChannel (effectiveChannel encoder decoder tensorPower))
+    (htranspose_code_bound :
+      diamondOp
+          ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) ≤
+        (diamondOp ((transposeMap base).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap base).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact holevo_werner_improved_bound_of_block_tensorPower_diamondOp_bound
+    T m encoder decoder tensorPower ε heffective htranspose_code_bound herror hm hε
+
+/-- Stronger block-space Corollary 2 wrapper from the ordinary `diamondOp` bound on the
+transposed block middle channel itself. -/
+theorem corollary2_of_block_middle_diamondOp_bound
+    {base block msg : Type u}
+    [Fintype base] [DecidableEq base]
+    [Fintype block] [DecidableEq block] [Nonempty block]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel base) (m : ℕ)
+    (encoder : Superoperator msg block)
+    (decoder : Superoperator block msg)
+    (tensorPower : Channel block)
+    (ε : ℝ)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (htensorPower : IsQuantumChannel tensorPower)
+    (hbound :
+      diamondOp ((transposeMap block).comp tensorPower) ≤
+        (diamondOp ((transposeMap base).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap base).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact holevo_werner_improved_bound_of_block_middle_diamondOp_bound
+    T m encoder decoder tensorPower ε hencoder hdecoder htensorPower hbound herror hm hε
+
+/-- Corollary 2 specialized to the concrete recursive `m`-use channel
+`tensorPowerChannel T m`. This removes the abstract `tensorPower` placeholder from the
+top-level statement, although it still uses the current paper-level coded transpose bound as
+its remaining analytical input. -/
+theorem corollary2_of_recursive_tensorPower_channel
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (htranspose_code_bound :
+      diamondOp
+          ((transposeMap msg).comp
+            (effectiveChannel encoder decoder (tensorPowerChannel T m))) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  have htensorPower : IsQuantumChannel (tensorPowerChannel T m) :=
+    tensorPowerChannel_isQuantumChannel (hT := hT) m
+  have heffective :
+      IsQuantumChannel (effectiveChannel encoder decoder (tensorPowerChannel T m)) :=
+    effectiveChannel_isQuantumChannel hencoder htensorPower hdecoder
+  exact corollary2_of_block_tensorPower_diamondOp_bound
+    T m encoder decoder (tensorPowerChannel T m) ε
+    heffective htranspose_code_bound herror hm hε
+
+/-- Stronger recursive-tensor-power Corollary 2 wrapper from the ordinary `diamondOp` bound
+on the concrete `m`-use channel `tensorPowerChannel T m`. -/
+theorem corollary2_of_recursive_tensorPower_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (hbound :
+      diamondOp
+          ((transposeMap (TensorPowerType phys m)).comp (tensorPowerChannel T m)) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  have htensorPower : IsQuantumChannel (tensorPowerChannel T m) :=
+    tensorPowerChannel_isQuantumChannel (hT := hT) m
+  exact corollary2_of_block_middle_diamondOp_bound
+    T m encoder decoder (tensorPowerChannel T m) ε
+    hencoder hdecoder htensorPower hbound herror hm hε
+
+/-- Corollary 2 on the concrete recursive `m`-use channel `tensorPowerChannel T m`, with the
+required middle-channel `diamondOp` bound proved internally. -/
+theorem corollary2_of_recursive_tensorPower
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_recursive_tensorPower_diamondOp_bound
+    T hT m encoder decoder hencoder hdecoder ε
+    (diamondOp_transpose_tensorPowerChannel_le_pow T hT m)
+    herror hm hε
+
+/-- Linear Corollary 2 on the concrete recursive `m`-use channel `tensorPowerChannel T m`,
+with the required middle-channel `diamondOp` bound proved internally. -/
+theorem corollary2_linear_bound_of_recursive_tensorPower
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact holevo_werner_improved_linear_bound_of_recursive_tensorPower
+    T hT m encoder decoder ε hencoder hdecoder herror
+
+/-- Paper-facing alias for the stronger recursive tensor-power wrapper. -/
+theorem paper_corollary2_of_recursive_tensorPower_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (hbound :
+      diamondOp
+          ((transposeMap (TensorPowerType phys m)).comp (tensorPowerChannel T m)) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_recursive_tensorPower_diamondOp_bound
+    T hT m encoder decoder hencoder hdecoder ε hbound herror hm hε
+
+/-- Paper-facing alias for the recursive tensor-power Corollary 2 statement with the
+middle-channel `diamondOp` bound proved internally. -/
+theorem paper_corollary2_of_recursive_tensorPower
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_recursive_tensorPower
+    T hT m encoder decoder hencoder hdecoder ε herror hm hε
+
+/-- Paper-facing linear alias for the recursive tensor-power Corollary 2 statement with the
+middle-channel `diamondOp` bound proved internally. -/
+theorem paper_corollary2_linear_bound_of_recursive_tensorPower
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    :
+    (1 - Real.sqrt 2 * ε) * (Fintype.card msg : ℝ) ≤
+      (diamondOp ((transposeMap phys).comp T)) ^ m := by
+  exact corollary2_linear_bound_of_recursive_tensorPower
+    T hT m encoder decoder hencoder hdecoder ε herror
+
+/-- Canonical paper-facing Corollary 2 alias. This is the exact recursive-tensor-power
+wrapper corresponding to the statement in `docs/diamond.md`. -/
+theorem paper_corollary2
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact paper_corollary2_of_recursive_tensorPower
+    T hT m encoder decoder hencoder hdecoder ε herror hm hε
+
+/-- Paper-facing alias for Corollary 2 on the concrete recursive `m`-use channel
+`tensorPowerChannel T m`. -/
+theorem paper_corollary2_of_recursive_tensorPower_channel
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (hT : IsQuantumChannel T) (m : ℕ)
+    (encoder : Superoperator msg (TensorPowerType phys m))
+    (decoder : Superoperator (TensorPowerType phys m) msg)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (ε : ℝ)
+    (htranspose_code_bound :
+      diamondOp
+          ((transposeMap msg).comp
+            (effectiveChannel encoder decoder (tensorPowerChannel T m))) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder (tensorPowerChannel T m))))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_recursive_tensorPower_channel
+    T hT m encoder decoder hencoder hdecoder ε htranspose_code_bound herror hm hε
+
+/-- Paper-facing alias for the unconditional ordinary-`diamondOp` corollary wrapper on a
+single physical space. -/
+theorem paper_corollary2_of_tensorPower_diamondOp_bound
+    {phys msg : Type u}
+    [Fintype phys] [DecidableEq phys] [Nonempty phys]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel phys) (m : ℕ)
+    (encoder : Superoperator msg phys)
+    (decoder : Superoperator phys msg)
+    (tensorPower : Channel phys)
+    (ε : ℝ)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (htensorPower : IsQuantumChannel tensorPower)
+    (hbound :
+      diamondOp ((transposeMap phys).comp tensorPower) ≤
+        (diamondOp ((transposeMap phys).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap phys).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_tensorPower_diamondOp_bound
+    T m encoder decoder tensorPower ε hencoder hdecoder htensorPower hbound herror hm hε
+
+/-- Paper-facing alias for the sharpest current block-space corollary wrapper. -/
+theorem paper_corollary2_of_block_tensorPower_diamondOp_bound
+    {base block msg : Type u}
+    [Fintype base] [DecidableEq base]
+    [Fintype block] [DecidableEq block]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel base) (m : ℕ)
+    (encoder : Superoperator msg block)
+    (decoder : Superoperator block msg)
+    (tensorPower : Channel block)
+    (ε : ℝ)
+    (heffective :
+      IsQuantumChannel (effectiveChannel encoder decoder tensorPower))
+    (htranspose_code_bound :
+      diamondOp
+          ((transposeMap msg).comp (effectiveChannel encoder decoder tensorPower)) ≤
+        (diamondOp ((transposeMap base).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap base).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_block_tensorPower_diamondOp_bound
+    T m encoder decoder tensorPower ε heffective htranspose_code_bound herror hm hε
+
+/-- Paper-facing alias for the stronger block-space ordinary-`diamondOp` wrapper. -/
+theorem paper_corollary2_of_block_middle_diamondOp_bound
+    {base block msg : Type u}
+    [Fintype base] [DecidableEq base]
+    [Fintype block] [DecidableEq block] [Nonempty block]
+    [Fintype msg] [DecidableEq msg] [Nonempty msg]
+    (T : Channel base) (m : ℕ)
+    (encoder : Superoperator msg block)
+    (decoder : Superoperator block msg)
+    (tensorPower : Channel block)
+    (ε : ℝ)
+    (hencoder : IsQuantumSuperoperator encoder)
+    (hdecoder : IsQuantumSuperoperator decoder)
+    (htensorPower : IsQuantumChannel tensorPower)
+    (hbound :
+      diamondOp ((transposeMap block).comp tensorPower) ≤
+        (diamondOp ((transposeMap base).comp T)) ^ m)
+    (herror :
+      ε =
+        (1 / 2 : ℝ) *
+          diamondOp (idMinus (effectiveChannel encoder decoder tensorPower)))
+    (hm : 0 < m) (hε : ε < 1 / Real.sqrt 2) :
+    Real.logb 2 (Fintype.card msg : ℝ) / (m : ℝ) ≤
+      Real.logb 2 (diamondOp ((transposeMap base).comp T)) +
+        (1 / (m : ℝ)) * Real.logb 2 (1 / (1 - Real.sqrt 2 * ε)) := by
+  exact corollary2_of_block_middle_diamondOp_bound
+    T m encoder decoder tensorPower ε hencoder hdecoder htensorPower hbound herror hm hε
 
 end
 end Diamond

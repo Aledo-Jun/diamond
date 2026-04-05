@@ -20,45 +20,31 @@ def omegaVec (d : ℕ) : Fin d × Fin d → ℂ :=
   fun ij => if ij.1 = ij.2 then (Real.sqrt d : ℂ)⁻¹ else 0
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-/-- The maximally entangled vector used in the lower bound for Eq. (7). -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-2. Code:
-```lean
-def omegaVec (d : ℕ) : Fin d × Fin d → ℂ :=
-```
-This line starts the `omegaVec` declaration. Because it begins with `def`, Lean now knows what kind of named object is being introduced.
+## Proof / Construction Shape
 
-3. Code:
-```lean
-  fun ij => if ij.1 = ij.2 then (Real.sqrt d : ℂ)⁻¹ else 0
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+Most declarations in this repository follow the same pattern:
 
-## Mathematical summary
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-In ordinary mathematical language, `omegaVec` is the project's formal Lean name for the object introduced in this declaration.
+## Lean Cues
 
-## Dependencies and downstream use
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-### Earlier declarations this depends on
-- This declaration does not explicitly cite an earlier named declaration from the documented tree; it mostly uses Lean primitives or local algebraic steps.
-
-### Later declarations that use this one
-- [`phiState`](phiState.md) in `EndMatter/Eq7.lean`
-- [`phiState_trace`](phiState_trace.md) in `EndMatter/Eq7.lean`
-- [`phiState_isDensityState`](phiState_isDensityState.md) in `EndMatter/Eq7.lean`
-- [`phiState_apply`](phiState_apply.md) in `EndMatter/Eq7.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `EndMatter/Eq7.lean` section in the index](../../INDEX.md#diamond-endmatter-eq7-lean)
-- [Next declaration in this file](phiState.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

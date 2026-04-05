@@ -24,74 +24,31 @@ private theorem traceNormOp_density_eq_one
   simp
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-1. Code:
-```lean
-/-- Density states have concrete trace norm `1`. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-2. Code:
-```lean
-private theorem traceNormOp_density_eq_one
-```
-This line starts the `traceNormOp_density_eq_one` declaration. Because it begins with `theorem`, Lean now knows what kind of named object is being introduced.
+## Proof / Construction Shape
 
-3. Code:
-```lean
-    {d : Type u} [Fintype d] [DecidableEq d]
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  A bracket such as `[Fintype d]` tells Lean that the index set `d` is finite, so sums over all indices make sense.  A bracket such as `[DecidableEq d]` tells Lean that it can decide whether two indices are equal.
+Most declarations in this repository follow the same pattern:
 
-4. Code:
-```lean
-    {ρ : Matrix d d ℂ} (hρ : IsDensityState ρ) :
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.  `Matrix d d ℂ` means a square matrix with complex entries; the index type `d` tells Lean which rows and columns exist.
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-5. Code:
-```lean
-    traceNormOp ρ = 1 := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
+## Lean Cues
 
-6. Code:
-```lean
-  rw [traceNormOp_posSemidef_eq_trace hρ.1, hρ.2]
-```
-This line uses rewriting. Lean replaces one expression by an equal expression using the lemmas listed in brackets.
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-7. Code:
-```lean
-  simp
-```
-This line simplifies the goal using definitions and known equalities. `simpa` means that, after simplification, the desired statement matches a theorem Lean already has.
-
-## Mathematical summary
-
-Restated without Lean syntax, `traceNormOp_density_eq_one` is the theorem or lemma written above.
-
-- State the desired identity or inequality in Lean’s syntax.
-- Introduce temporary names and intermediate claims that organize the argument.
-- Use rewriting, simplification, and earlier lemmas to reduce the goal to standard matrix or norm manipulations.
-- Close the remaining algebraic or order-theoretic steps with Lean’s proof tactics.
-
-## Dependencies and downstream use
-
-### Earlier declarations this depends on
-- [`traceNormOp`](../../Setups/traceNormOp.md) from `Setups.lean`
-- [`IsDensityState`](../../Setups/IsDensityState.md) from `Setups.lean`
-- [`traceNormOp_posSemidef_eq_trace`](traceNormOp_posSemidef_eq_trace.md) from `Theorem/Lemma1.lean`
-
-### Later declarations that use this one
-- No later documented declaration mentions this name explicitly.
-
-## Backlinks
-
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `Theorem/Lemma1.lean` section in the index](../../INDEX.md#diamond-theorem-lemma1-lean)
-- [Previous declaration in this file](traceNormOp_posSemidef_eq_trace.md)
-- [Next declaration in this file](traceNormOp_sub_density_le_two.md)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

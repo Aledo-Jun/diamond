@@ -1,129 +1,105 @@
 # theorem_eq7
 
-## Source location
+## Source
 
-- Original Lean file: `Diamond/EndMatter/Eq7.lean`
-- Declaration name: `theorem_eq7`
-- Declaration kind: `theorem`
+- Lean file: `Diamond/EndMatter/Eq7.lean`
+- Declaration: `Diamond.EndMatter.Eq7.theorem_eq7`
 
-## Why this declaration exists
+## Statement
 
-This theorem proves the lower bound labelled Eq. (7) by evaluating the witness state explicitly.
+For \(d \ge 2\),
 
- In the file `EndMatter/Eq7.lean`, it contributes to the explicit witness construction used to prove the lower bound labelled Eq. (7). Later proofs call this result by name, so documenting it makes the larger argument readable as a mathematical chain rather than as opaque proof script.
+$$
+2 \cot\!\left(\frac{\pi}{2d}\right)
+\le
+\|\Lambda_d\|_\diamond.
+$$
 
-## Original code
+## What Theorem Eq. (7) Does
 
-```lean
-/-- Paper Eq. (7): lower bound on `‖Λ_d‖⋄`. -/
-theorem theorem_eq7 (d : ℕ) [Fact (1 < d)] :
-    2 * Real.cot (Real.pi / (2 * (d : ℝ))) ≤ diamondOp (Lambda d) := by
-  calc
-    2 * Real.cot (Real.pi / (2 * (d : ℝ)))
-      = traceNormOp
-          ((d : ℂ)⁻¹ •
-            (swapMatrix d - swapMatrix d * ((Ud d)ᵀ ⊗ₖ star (Ud d)))) := by
-              symm
-              exact explicit_witness_traceNorm_eq d
-    _ ≤ diamondOp (Lambda d) := theorem_eq7_witness_bound_explicit d
-```
+This theorem gives an explicit lower bound on the diamond norm of the paper's special channel
+\(\Lambda_d\). Unlike the abstract upper bounds from the main theorem, this is a concrete witness
+computation.
 
-## Block-by-block explanation
+## Proof Structure
 
-The explanation below follows the declaration block by block. Each block groups a coherent piece of the definition or proof, so the mathematical structure is easier to see than in a strictly line-oriented reading.
+The proof is constructive.
 
-1. Code:
-```lean
-/-- Paper Eq. (7): lower bound on `‖Λ_d‖⋄`. -/
-```
-This is a Lean docstring. It is a human-written comment that tells readers what the declaration is meant to express before the formal code begins.
+### 1. Choose the maximally entangled witness
 
-2. Code:
-```lean
-theorem theorem_eq7 (d : ℕ) [Fact (1 < d)] :
-```
-This line starts the `theorem_eq7` declaration. Because it begins with `theorem`, Lean now knows what kind of named object is being introduced.
+The file defines the vector
 
-3. Code:
-```lean
-    2 * Real.cot (Real.pi / (2 * (d : ℝ))) ≤ diamondOp (Lambda d) := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.
+$$
+\Omega_d = \frac{1}{\sqrt{d}} \sum_{j=1}^d e_j \otimes e_j
+$$
 
-4. Code:
-```lean
-  calc
-```
-This line begins a chained calculation. Each displayed step that follows must be justified by the indented proof after `:= by`.
+and its rank-one state
 
-5. Code:
-```lean
-    2 * Real.cot (Real.pi / (2 * (d : ℝ)))
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+$$
+\Phi_d = |\Omega_d\rangle\langle\Omega_d|.
+$$
 
-6. Code:
-```lean
-      = traceNormOp
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+This state is then used as the explicit diamond-norm witness.
 
-7. Code:
-```lean
-          ((d : ℂ)⁻¹ •
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+### 2. Compute \((\Lambda_d \otimes \mathrm{id})(\Phi_d)\)
 
-8. Code:
-```lean
-            (swapMatrix d - swapMatrix d * ((Ud d)ᵀ ⊗ₖ star (Ud d)))) := by
-```
-This line says that a proof script begins here. Everything indented underneath is a sequence of instructions that Lean will check step by step.  `Matrix d d ℂ` means a square matrix with complex entries; the index type `d` tells Lean which rows and columns exist.  The symbol `⊗ₖ` is the Kronecker (tensor) product of matrices.  The superscript `ᵀ` means ordinary transpose.
+The witness matrix is expanded exactly in terms of the swap operator and the phase unitary
+\(U_d\). In the code, this is the sequence of lemmas around:
 
-9. Code:
-```lean
-              symm
-```
-This line is one local step in the declaration. It either refines the formula being defined or advances the proof by a small algebraic or logical move.
+- `transpose_phiState_eq_swap`,
+- `transpose_ad_phiState_eq_swap_mul_phase`,
+- `lambda_phiState_eq`.
 
-10. Code:
-```lean
-              exact explicit_witness_traceNorm_eq d
-```
-This line finishes the current goal by giving Lean the exact theorem, lemma, or term that proves it.
+The outcome is an explicit matrix formula for the image of \(\Phi_d\).
 
-11. Code:
-```lean
-    _ ≤ diamondOp (Lambda d) := theorem_eq7_witness_bound_explicit d
-```
-This line is one step inside a `calc` block. Lean is checking that the new expression really follows from the previous one.
+### 3. Reduce the trace norm to a one-dimensional phase sum
 
-## Mathematical summary
+Using the fact that the swap operator is unitary and the witness becomes diagonal after the right
+conjugation, the trace norm collapses to
 
-Restated without Lean syntax, `theorem_eq7` is the theorem or lemma written above.
+$$
+\sum_{k=0}^{d-1} \|1 - U_d(k,k)\|.
+$$
 
-- Build the maximally entangled witness state $\Phi_d = |\Omega_d\rangle\langle\Omega_d|$.
-- Compute explicitly what `Lambda d` does to that witness.
-- Recognize the result as a swap matrix multiplied by a diagonal phase matrix.
-- Evaluate the trace norm of that explicit matrix by reducing it to a finite trigonometric sum.
-- Use the witness inequality to conclude the diamond norm lower bound.
+This is the hard algebraic simplification step in the file.
 
-## Dependencies and downstream use
+### 4. Evaluate the trigonometric sum
 
-### Earlier declarations this depends on
-- [`traceNormOp`](../../Setups/traceNormOp.md) from `Setups.lean`
-- [`diamondOp`](../../Setups/diamondOp.md) from `Setups.lean`
-- [`Ud`](../../Setups/Ud.md) from `Setups.lean`
-- [`Lambda`](../../Setups/Lambda.md) from `Setups.lean`
-- [`swapMatrix`](../../PositiveGap/Lemma6/swapMatrix.md) from `PositiveGap/Lemma6.lean`
-- [`theorem_eq7_witness_bound_explicit`](theorem_eq7_witness_bound_explicit.md) from `EndMatter/Eq7.lean`
-- [`explicit_witness_traceNorm_eq`](explicit_witness_traceNorm_eq.md) from `EndMatter/Eq7.lean`
+Each phase term is rewritten as a sine:
 
-### Later declarations that use this one
-- [`alpha_lower_bound`](../Eq8/alpha_lower_bound.md) in `EndMatter/Eq8.lean`
+$$
+\|1 - U_d(k,k)\|
+=
+2 \sin\!\left(\frac{\pi k}{d}\right),
+$$
 
-## Backlinks
+and then the finite sine sum is evaluated as
 
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `EndMatter/Eq7.lean` section in the index](../../INDEX.md#diamond-endmatter-eq7-lean)
-- [Previous declaration in this file](explicit_witness_traceNorm_eq.md)
+$$
+\sum_{k=0}^{d-1} 2 \sin\!\left(\frac{\pi k}{d}\right)
+=
+2 \cot\!\left(\frac{\pi}{2d}\right).
+$$
+
+### 5. Turn the witness value into a diamond-norm lower bound
+
+Since \(\Phi_d\) is a valid density-state witness,
+
+$$
+\|(\Lambda_d \otimes \mathrm{id})(\Phi_d)\|_1
+\le
+\|\Lambda_d\|_\diamond.
+$$
+
+Combining the explicit trace-norm computation with this witness bound proves Eq. (7).
+
+## Why This Theorem Matters
+
+Eq. (7) provides the lower-bound side of the paper's constant comparison. Together with Eq. (8)
+and Theorem 1, it yields the universal lower bound
+
+$$
+\frac{2}{\pi} \le \alpha
+$$
+
+for any dimension-independent constant \(\alpha\) in the main transposition inequality.

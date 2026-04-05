@@ -32,47 +32,31 @@ theorem exists_maximizing_state
   ...
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. Rename the channel difference `Φ := idMinus T`, its transposed version `LΦ`, and the stabilized
-   partially transposed map `Ψ`.
-2. Put the unitary matrices and density states into a compact product set.
-3. Define the continuous objective
-   `f(U, ρ) = Re(trace(U * Ψ ρ))`.
-4. Use compactness to choose a maximizing pair `(U₀, ρ₀)`.
-5. For each fixed `ρ`, apply the Hermitian variational trace-norm formula to compare
-   `traceNormOp (Ψ ρ)` with `f(U₀, ρ₀)`.
-6. Convert that comparison into equality
-   `traceNormOp ((LΦ ⊗ id)(ρ₀)) = diamondOp LΦ`.
-7. Use the explicit `phiStateGen` witness and `idMinus T ≠ 0` to show the maximizing state is not a
-   zero witness for `Φ ⊗ id`.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-This is the exact finite-dimensional “the supremum is attained” statement needed by
-`theorem_not_tight`. The proof combines:
+## Proof / Construction Shape
 
-- compactness of density states,
-- compactness of the unitary group,
-- a continuous bilinear pairing,
-- and a unitary variational formula for the trace norm of Hermitian matrices.
+Most declarations in this repository follow the same pattern:
 
-## Dependencies and downstream use
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-### Earlier declarations this depends on
-- [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
-- [`DensityState`](../Setups/DensityState.md) from `Setups.lean`
-- [`IsQuantumChannel`](../Setups/IsQuantumChannel.md) from `Setups.lean`
-- [`transposeMap`](../Setups/transposeMap.md) from `Setups.lean`
-- [`tensorWithIdentity`](../Setups/tensorWithIdentity.md) from `Setups.lean`
-- [`diamondOp`](../Setups/diamondOp.md) from `Setups.lean`
-- [`idMinus`](../Setups/idMinus.md) from `Setups.lean`
+## Lean Cues
 
-### Later declarations that use this one
-- [`theorem_not_tight`](../PositiveGap/NotTight/theorem_not_tight.md) in `PositiveGap/NotTight.lean`
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

@@ -26,37 +26,31 @@ theorem diamond_le_of_pointwise
   ...
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. Unfold `diamondOp` into the `sSup` defining `diamondNormAt`.
-2. Build one explicit density state `ρ0` from a basis vector so the witness set is nonempty.
-3. Apply `csSup_le`.
-4. Use the hypothesis `hbound` to show every witness value is at most `b`.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-The statement is the standard supremum argument:
+## Proof / Construction Shape
 
-- if every stabilized test state gives output trace norm at most `b`,
-- then the stabilized supremum defining the diamond norm is also at most `b`.
+Most declarations in this repository follow the same pattern:
 
-The `Nonempty d` hypothesis is essential here because the proof needs one explicit density state to
-show the supremum is taken over a nonempty set.
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-## Dependencies and downstream use
+## Lean Cues
 
-### Earlier declarations this depends on
-- [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`DensityState`](../Setups/DensityState.md) from `Setups.lean`
-- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
-- [`tensorWithIdentity`](../Setups/tensorWithIdentity.md) from `Setups.lean`
-- [`diamondNormAt`](../Setups/diamondNormAt.md) from `Setups.lean`
-- [`diamondOp`](../Setups/diamondOp.md) from `Setups.lean`
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-### Related declaration
-- [`diamond_le_of_pointwise_nonempty`](diamond_le_of_pointwise_nonempty.md) in `StandardFacts.lean`
-
-## Backlinks
-
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

@@ -18,3 +18,10 @@ import Diamond.PositiveGap.NotTight
 import Diamond.EndMatter.Eq7
 import Diamond.EndMatter.Eq8
 import Diamond.EndMatter.Corollary2
+
+import Diamond.HolevoWerner.Common
+import Diamond.HolevoWerner.Basic
+import Diamond.HolevoWerner.TensorPower
+import Diamond.HolevoWerner.ReplaceArgument
+import Diamond.HolevoWerner.CodingScheme
+import Diamond.HolevoWerner.Theorem

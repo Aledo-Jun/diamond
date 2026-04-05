@@ -29,32 +29,31 @@ private theorem partialTranspose_rank_upper_bound
   ...
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. Use `rank_two_traceless_hermitian_decomposition` to write `X` as a difference of two rank-one
-   projectors.
-2. Use the vanishing partial trace hypothesis to identify the two reduced states.
-3. Apply the matrix form of Uhlmann’s theorem to compare the two vectors by a unitary.
-4. Rewrite the partial transpose of `X` into the explicit tensor-difference form handled by the
-   earlier rank lemmas.
-5. Conclude the rank bound from the explicit diagonal/tensor estimate.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-This is the internal rank estimate that drives the contradiction in the finite-dimensional
-non-tightness proof. It is one of the deepest local ingredients in `PositiveGap/NotTight.lean`.
+## Proof / Construction Shape
 
-## Dependencies and downstream use
+Most declarations in this repository follow the same pattern:
 
-### Earlier declarations this depends on
-- [`partialTraceLeft`](../../Setups/partialTraceLeft.md) from `Setups.lean`
-- [`partialTransposeMap`](../../Setups/partialTransposeMap.md) from `Setups.lean`
-- `rank_two_traceless_hermitian_decomposition` from `StandardFacts.lean`
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-### Later declarations that use this one
-- [`theorem_not_tight`](theorem_not_tight.md) in `PositiveGap/NotTight.lean`
+## Lean Cues
 
-## Backlinks
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-- [Back to `INDEX.md`](../../INDEX.md)
-- [Back to the `PositiveGap/NotTight.lean` section in the index](../../INDEX.md#diamond-positivegap-nottight-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.

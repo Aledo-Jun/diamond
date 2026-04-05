@@ -27,33 +27,31 @@ theorem lemma_transpose_diamond
   ...
 ```
 
-## Block-by-block explanation
+## How To Read This Declaration
 
-1. Rewrite the target dimension factor as `card(d)` via `sqrt_card_prod_self`.
-2. Prove the upper bound with `diamond_le_of_pointwise_nonempty`, `lemma2`, and `lemma3`.
-3. Choose the explicit density witness `phiStateGen d`.
-4. Compute its image under transposition and identify it with the swap operator.
-5. Evaluate the trace norm of that witness exactly to get the lower bound.
+This page now uses a concise reading guide instead of a line-by-line Lean walkthrough.
+The best way to read the declaration is:
 
-## Mathematical summary
+1. read the **Why this declaration exists** section for the mathematical role,
+2. read the **Original code** block as the exact formal statement or construction,
+3. treat the proof as a small number of conceptual moves rather than a commentary on each Lean line.
 
-The theorem is the project’s formal version of the standard transposition-norm computation. It is
-used repeatedly to replace the dimension factor by `diamondOp (transposeMap d)` in later arguments.
+## Proof / Construction Shape
 
-## Dependencies and downstream use
+Most declarations in this repository follow the same pattern:
 
-### Earlier declarations this depends on
-- [`transposeMap`](../Setups/transposeMap.md) from `Setups.lean`
-- [`diamondOp`](../Setups/diamondOp.md) from `Setups.lean`
+- **setup**: introduce the ambient spaces, matrices, channels, or witnesses,
+- **reduction**: rewrite the goal into a standard matrix, trace, or diamond-norm form,
+- **core step**: apply previously proved lemmas from the same module or an earlier one,
+- **finish**: simplify the remaining algebra with `rw`, `simp`, `calc`, or `ext`.
 
-### Later declarations that use this one
-- [`theorem1`](../Theorem/Theorem1/theorem1.md) in `Theorem/Theorem1.lean`
-- [`remark1`](../Theorem/Remark1/remark1.md) in `Theorem/Remark1.lean`
-- [`theorem_not_tight`](../PositiveGap/NotTight/theorem_not_tight.md) in `PositiveGap/NotTight.lean`
-- [`alpha_lower_bound`](../EndMatter/Eq8/alpha_lower_bound.md) in `EndMatter/Eq8.lean`
-- [`corollary2_linear_bound`](../EndMatter/Corollary2/corollary2_linear_bound.md) in `EndMatter/Corollary2.lean`
+## Lean Cues
 
-## Backlinks
+- `let` names an intermediate mathematical object.
+- `have` records a useful subclaim.
+- `calc` is a displayed derivation written as a chain of equalities or inequalities.
+- `rw` rewrites using an identity.
+- `simp` performs controlled simplification.
+- `ext` means the proof is reduced to entrywise or pointwise equality.
 
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
+For the math-first reading path, start from `DESCRIPTIONS/INDEX.md` and use the module overviews and flagship theorem pages before coming back to individual declaration pages.
