@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # trace_Ud_eq_zero
 
 ## Source location

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # corollary2_linear_bound
 
 ## Source

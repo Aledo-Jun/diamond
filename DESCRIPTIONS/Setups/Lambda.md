@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Lambda
 
 ## Source location

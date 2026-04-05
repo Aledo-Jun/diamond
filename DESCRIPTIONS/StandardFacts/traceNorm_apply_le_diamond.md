@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNorm_apply_le_diamond
 
 ## Source location

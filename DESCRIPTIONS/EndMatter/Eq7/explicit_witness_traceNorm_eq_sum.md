@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # explicit_witness_traceNorm_eq_sum
 
 ## Source location

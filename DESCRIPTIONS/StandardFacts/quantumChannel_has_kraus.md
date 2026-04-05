@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # quantumChannel_has_kraus
 
 ## Source location

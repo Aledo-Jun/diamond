@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # paper_holevo_werner_improved_converse_of_recursive_tensorPower
 
 ## Source

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # ud_add_mul_star_eq
 
 ## Source location

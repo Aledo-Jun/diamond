@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNormOp_eq_of_conjTranspose_mul_self_eq
 
 ## Source location

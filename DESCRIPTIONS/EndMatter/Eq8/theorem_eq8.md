@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # theorem_eq8
 
 ## Source

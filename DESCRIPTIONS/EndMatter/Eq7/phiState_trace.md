@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # phiState_trace
 
 ## Source location

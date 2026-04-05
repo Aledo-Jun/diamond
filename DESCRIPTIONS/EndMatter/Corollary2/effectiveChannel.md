@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # effectiveChannel
 
 ## Source location

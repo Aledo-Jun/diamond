@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # diamondNorm
 
 ## Source location

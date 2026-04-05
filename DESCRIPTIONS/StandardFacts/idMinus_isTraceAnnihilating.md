@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # idMinus_isTraceAnnihilating
 
 ## Source location

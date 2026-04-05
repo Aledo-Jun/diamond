@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # existsUnique_nonzero_of_pairwise_zero
 
 ## Source location

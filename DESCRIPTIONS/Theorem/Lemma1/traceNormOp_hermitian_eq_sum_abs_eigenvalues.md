@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNormOp_hermitian_eq_sum_abs_eigenvalues
 
 ## Source location

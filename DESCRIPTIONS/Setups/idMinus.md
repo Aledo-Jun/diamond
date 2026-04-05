@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # idMinus
 
 ## Source location

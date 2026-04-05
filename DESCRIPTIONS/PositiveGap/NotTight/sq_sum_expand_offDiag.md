@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # sq_sum_expand_offDiag
 
 ## Source location

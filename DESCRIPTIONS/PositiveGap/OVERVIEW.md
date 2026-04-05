@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # PositiveGap Overview
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # exists_maximizing_state
 
 ## Source location

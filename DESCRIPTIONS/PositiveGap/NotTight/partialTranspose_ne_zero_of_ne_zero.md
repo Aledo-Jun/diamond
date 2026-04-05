@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # partialTranspose_ne_zero_of_ne_zero
 
 ## Source location

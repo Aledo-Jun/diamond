@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # lemma_transpose_diamond
 
 ## Source location

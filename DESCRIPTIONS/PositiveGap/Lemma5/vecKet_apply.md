@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # vecKet_apply
 
 ## Source location

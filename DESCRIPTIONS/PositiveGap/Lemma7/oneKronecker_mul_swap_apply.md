@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # oneKronecker_mul_swap_apply
 
 ## Source location

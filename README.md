@@ -214,6 +214,8 @@ If you are new to Lean, start with the beginner docs:
 
 That index now gives a math-first reading guide: module overviews, flagship theorem pages, and
 only then the older declaration-level reference pages when you need exact source lookup.
+The same `DESCRIPTIONS/` tree is now also set up as the GitHub Pages/Jekyll homepage used by the
+documentation workflow.
 
 ## Self-Contained Status
 
@@ -239,6 +241,7 @@ with:
 - module-level overviews written in ordinary mathematical language
 - flagship theorem pages with displayed formulas and proof architecture summaries
 - legacy declaration-level pages retained as secondary lookup material
+- a Jekyll site configuration so the same material can be published as a browsable docs site
 
 ## License / Usage
 

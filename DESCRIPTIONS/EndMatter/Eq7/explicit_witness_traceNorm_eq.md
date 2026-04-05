@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # explicit_witness_traceNorm_eq
 
 ## Source location

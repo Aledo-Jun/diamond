@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # hsNorm_nonneg
 
 ## Source location

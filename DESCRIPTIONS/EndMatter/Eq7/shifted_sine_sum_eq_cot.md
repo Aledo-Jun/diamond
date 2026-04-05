@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # shifted_sine_sum_eq_cot
 
 ## Source location

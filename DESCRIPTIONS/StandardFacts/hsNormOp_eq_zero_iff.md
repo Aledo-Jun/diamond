@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # hsNormOp_eq_zero_iff
 
 ## Source location

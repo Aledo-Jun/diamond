@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # pairwise_zero_of_sum_sq_eq_sq_sum
 
 ## Source location

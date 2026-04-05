@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # ud_add_eq_mul
 
 ## Source location

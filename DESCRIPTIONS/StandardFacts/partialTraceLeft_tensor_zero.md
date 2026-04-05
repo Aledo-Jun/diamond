@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # partialTraceLeft_tensor_zero
 
 ## Source location

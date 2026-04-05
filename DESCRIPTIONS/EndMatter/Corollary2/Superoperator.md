@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Superoperator
 
 ## Source location

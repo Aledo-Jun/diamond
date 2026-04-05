@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # IsDensityState
 
 ## Source location

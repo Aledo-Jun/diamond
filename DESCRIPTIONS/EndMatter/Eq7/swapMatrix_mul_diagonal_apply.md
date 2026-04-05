@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # swapMatrix_mul_diagonal_apply
 
 ## Source location

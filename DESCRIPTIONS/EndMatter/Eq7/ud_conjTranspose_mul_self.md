@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # ud_conjTranspose_mul_self
 
 ## Source location

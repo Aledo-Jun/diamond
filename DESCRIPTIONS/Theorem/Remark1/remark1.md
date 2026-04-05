@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # remark1
 
 ## Source

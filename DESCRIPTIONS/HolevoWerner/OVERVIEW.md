@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Holevo--Werner Overview
 
 ## Purpose

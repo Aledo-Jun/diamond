@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Diamond Descriptions
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # hsNorm
 
 ## Source location

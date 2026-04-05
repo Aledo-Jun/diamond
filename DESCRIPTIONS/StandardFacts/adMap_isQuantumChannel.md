@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # adMap_isQuantumChannel
 
 ## Source location

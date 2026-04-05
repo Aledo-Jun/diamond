@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # asymptotic_cotangent_lower_bound
 
 ## Source location

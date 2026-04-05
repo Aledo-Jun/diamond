@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # unitary_channel_diamond_distance_eq_two_of_trace_zero
 
 ## Source location

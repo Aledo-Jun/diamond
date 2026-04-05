@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # diamondOp_transpose_tensorPowerChannel_le_pow
 
 ## Source

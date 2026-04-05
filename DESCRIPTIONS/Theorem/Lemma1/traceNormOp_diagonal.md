@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNormOp_diagonal
 
 ## Source location

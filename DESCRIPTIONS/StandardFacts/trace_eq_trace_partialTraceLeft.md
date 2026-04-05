@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # trace_eq_trace_partialTraceLeft
 
 ## Source location

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Operator
 
 ## Source location

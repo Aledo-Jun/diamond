@@ -1,0 +1,10 @@
+title: Diamond Formalization
+description: Human-friendly guide to the Lean formalization of the diamond-norm transposition paper
+markdown: kramdown
+kramdown:
+  input: GFM
+permalink: pretty
+theme: null
+exclude:
+  - Gemfile
+  - Gemfile.lock

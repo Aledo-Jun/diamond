@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNormOp_posSemidef_eq_trace
 
 ## Source location

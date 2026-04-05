@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # sum_sq_sub_avg_eq_aux
 
 ## Source location

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # partialTranspose_rank_upper_bound
 
 ## Source location

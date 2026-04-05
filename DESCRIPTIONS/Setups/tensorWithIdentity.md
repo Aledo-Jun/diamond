@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # tensorWithIdentity
 
 ## Source location

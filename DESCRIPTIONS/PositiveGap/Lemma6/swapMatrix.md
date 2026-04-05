@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # swapMatrix
 
 ## Source location

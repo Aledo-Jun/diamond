@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # paper_corollary2
 
 ## Source

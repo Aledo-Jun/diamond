@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # tensorWithIdentity_trace_zero
 
 ## Source location

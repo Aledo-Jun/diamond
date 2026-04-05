@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # sqrt_card_prod_self
 
 ## Source location

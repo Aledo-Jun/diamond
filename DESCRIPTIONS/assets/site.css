@@ -1,0 +1,174 @@
+:root {
+  --bg: #f7f5ef;
+  --panel: #fffdf8;
+  --ink: #1d1a16;
+  --muted: #645b52;
+  --line: #ddd4c8;
+  --accent: #8b1e3f;
+  --accent-soft: #f7d9e2;
+  --code: #f3eee6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #faf8f2 0%, var(--bg) 100%);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  line-height: 1.65;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 20rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 2rem 1.25rem 3rem;
+  border-right: 1px solid var(--line);
+  background: rgba(255, 253, 248, 0.92);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.tagline {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.sidebar h2 {
+  margin: 1.6rem 0 0.45rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.sidebar ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.sidebar a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.sidebar a:hover {
+  color: var(--accent);
+}
+
+.content {
+  max-width: 62rem;
+  padding: 3rem 4rem 5rem;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-top: 0;
+}
+
+h2 {
+  margin-top: 2.2rem;
+  font-size: 1.45rem;
+}
+
+h3 {
+  margin-top: 1.4rem;
+  font-size: 1.1rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+code, pre {
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+code {
+  background: var(--code);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+}
+
+pre {
+  background: #201b18;
+  color: #f6efe6;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 0.6rem;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+blockquote {
+  margin: 1rem 0;
+  padding: 0.2rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  background: var(--panel);
+}
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+}
+
+.mermaid {
+  margin: 1.4rem 0;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  overflow-x: auto;
+}
+
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .content {
+    padding: 2rem 1.2rem 3rem;
+  }
+}

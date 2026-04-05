@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # ud_mul_star_self
 
 ## Source location

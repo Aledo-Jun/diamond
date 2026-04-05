@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # trNorm_nonneg
 
 ## Source location

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # lemma2_eq_imp_full_rank
 
 ## Source location

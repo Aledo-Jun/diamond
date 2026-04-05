@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # inv_sqrt_mul_inv_sqrt
 
 ## Source location

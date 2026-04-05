@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # hsNorm_sq_eq_re_trace_conjTranspose_mul_self
 
 ## Source location

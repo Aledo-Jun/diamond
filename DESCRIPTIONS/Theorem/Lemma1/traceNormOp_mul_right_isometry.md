@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # traceNormOp_mul_right_isometry
 
 ## Source location

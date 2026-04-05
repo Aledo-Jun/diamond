@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # norm_one_sub_ud_eq_sin
 
 ## Source location

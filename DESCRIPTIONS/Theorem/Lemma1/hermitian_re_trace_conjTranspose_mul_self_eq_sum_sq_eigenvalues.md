@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # hermitian_re_trace_conjTranspose_mul_self_eq_sum_sq_eigenvalues
 
 ## Source location

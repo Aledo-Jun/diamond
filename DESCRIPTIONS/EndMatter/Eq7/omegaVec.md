@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # omegaVec
 
 ## Source location

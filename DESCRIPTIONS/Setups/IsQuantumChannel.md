@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # IsQuantumChannel
 
 ## Source location

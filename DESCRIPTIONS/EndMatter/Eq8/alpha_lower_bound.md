@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # alpha_lower_bound
 
 ## Source

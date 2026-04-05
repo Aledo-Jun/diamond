@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # all_equal_of_sq_sum_eq_card_mul_sum_sq
 
 ## Source location

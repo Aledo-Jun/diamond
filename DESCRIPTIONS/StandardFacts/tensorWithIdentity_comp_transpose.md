@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # tensorWithIdentity_comp_transpose
 
 ## Source location

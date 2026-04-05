@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # theorem_eq7_witness_bound
 
 ## Source location

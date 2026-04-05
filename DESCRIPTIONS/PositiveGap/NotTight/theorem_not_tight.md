@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # theorem_not_tight
 
 ## Source

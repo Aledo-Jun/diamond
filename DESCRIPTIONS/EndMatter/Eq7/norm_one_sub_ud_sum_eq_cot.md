@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # norm_one_sub_ud_sum_eq_cot
 
 ## Source location

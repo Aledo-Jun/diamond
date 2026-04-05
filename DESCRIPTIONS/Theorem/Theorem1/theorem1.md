@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # theorem1
 
 ## Source

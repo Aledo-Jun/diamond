@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # explicit_witness_eq_swap_diagonal
 
 ## Source location

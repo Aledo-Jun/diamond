@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Setups Overview
 
 ## Purpose

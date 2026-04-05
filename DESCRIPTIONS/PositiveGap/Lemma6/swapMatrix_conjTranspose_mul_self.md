@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # swapMatrix_conjTranspose_mul_self
 
 ## Source location

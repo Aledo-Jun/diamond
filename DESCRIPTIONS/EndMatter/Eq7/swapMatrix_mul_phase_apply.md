@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # swapMatrix_mul_phase_apply
 
 ## Source location

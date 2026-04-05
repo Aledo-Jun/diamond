@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # lambda_phiState_eq
 
 ## Source location

@@ -2,5 +2,9 @@
 /.gauss
 /.codex
 *.axiom_check_backup
+/DESCRIPTIONS/_site
+/DESCRIPTIONS/.jekyll-cache
+/DESCRIPTIONS/.sass-cache
+/DESCRIPTIONS/.bundle
 
 AGENTS.md

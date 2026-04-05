@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # lemma5
 
 ## Source location

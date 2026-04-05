@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # corollary2
 
 ## Source

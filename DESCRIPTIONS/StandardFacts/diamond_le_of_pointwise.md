@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # diamond_le_of_pointwise
 
 ## Source location
