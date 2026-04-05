@@ -2,15 +2,15 @@
 
 ## Source location
 
-- Original Lean file: `Diamond/EndMatter/Corollary2.lean`
+- Original Lean file: `Diamond/HolevoWerner/Common.lean`
 - Declaration name: `Superoperator`
 - Declaration kind: `abbrev`
 
 ## Why this declaration exists
 
-This abbreviation provides a two-space version of the channel API so that the coding corollary can mention encoder and decoder explicitly.
+This abbreviation provides a two-space version of the channel API so that the coding theorems can mention encoder and decoder explicitly.
 
- In the file `EndMatter/Corollary2.lean`, it contributes to the coding-theoretic corollary stated in terms of encoder, decoder, and effective channel. Later declarations use this name instead of repeatedly expanding the underlying matrix formula.
+It now lives in the shared `HolevoWerner/Common` layer rather than in the endmatter file itself. The corollary pages still reference it because it is part of the common coding vocabulary used by the later `HolevoWerner` and `Corollary2` statements.
 
 ## Original code
 

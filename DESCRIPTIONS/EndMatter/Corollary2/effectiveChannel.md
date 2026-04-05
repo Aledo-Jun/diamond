@@ -2,15 +2,15 @@
 
 ## Source location
 
-- Original Lean file: `Diamond/EndMatter/Corollary2.lean`
+- Original Lean file: `Diamond/HolevoWerner/Common.lean`
 - Declaration name: `effectiveChannel`
 - Declaration kind: `abbrev`
 
 ## Why this declaration exists
 
-This abbreviation composes encoder, channel uses, and decoder into the effective message-space channel seen by the code.
+This abbreviation composes encoder, channel uses, and decoder into the effective message-space channel seen by the coding argument.
 
- In the file `EndMatter/Corollary2.lean`, it contributes to the coding-theoretic corollary stated in terms of encoder, decoder, and effective channel. Later declarations use this name instead of repeatedly expanding the underlying matrix formula.
+It now lives in the shared `HolevoWerner/Common` layer rather than in the endmatter file itself. The corollary pages still reference it because the effective channel is the central object passed from the coding layer into the final endmatter theorem.
 
 ## Original code
 
