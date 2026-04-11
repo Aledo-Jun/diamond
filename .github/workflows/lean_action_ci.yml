@@ -21,4 +21,3 @@ jobs:
       - uses: leanprover-community/docgen-action@v1
         with:
           homepage: DESCRIPTIONS
-          build-page: true
