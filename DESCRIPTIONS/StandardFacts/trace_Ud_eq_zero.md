@@ -63,14 +63,14 @@ The proof has exactly the same structure as the paper:
 ## Dependencies and downstream use
 
 ### Earlier declarations this depends on
-- [`Ud`](../Setups/Ud.md) from `Setups.lean`
+- [`Ud`](../Setups/Ud/) from `Setups.lean`
 
 ### Later declarations that use this one
-- [`theorem_eq8`](../EndMatter/Eq8/theorem_eq8.md) in `EndMatter/Eq8.lean`
+- [`theorem_eq8`](../EndMatter/Eq8/theorem_eq8/) in `EndMatter/Eq8.lean`
 
 ## Backlinks
 
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](unitary_channel_diamond_distance_eq_two_of_trace_zero.md)
-- [Next declaration in this file](exists_maximizing_state.md)
+- [Back to `INDEX.md`](../INDEX/)
+- [Back to the `StandardFacts.lean` section in the index](../INDEX/#diamond-standardfacts-lean)
+- [Previous declaration in this file](unitary_channel_diamond_distance_eq_two_of_trace_zero/)
+- [Next declaration in this file](exists_maximizing_state/)

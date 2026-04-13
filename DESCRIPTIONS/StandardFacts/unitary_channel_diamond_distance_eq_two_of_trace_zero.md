@@ -44,16 +44,16 @@ The proof has two parts.
 ## Dependencies and downstream use
 
 ### Earlier declarations this depends on
-- [`diamond_le_of_pointwise_nonempty`](diamond_le_of_pointwise_nonempty.md) from `StandardFacts.lean`
-- [`traceNorm_apply_le_diamond`](traceNorm_apply_le_diamond.md) from `StandardFacts.lean`
-- [`traceNormOp_sub_density_le_two`](../Theorem/Lemma1/traceNormOp_sub_density_le_two.md) from `Theorem/Lemma1.lean`
+- [`diamond_le_of_pointwise_nonempty`](diamond_le_of_pointwise_nonempty/) from `StandardFacts.lean`
+- [`traceNorm_apply_le_diamond`](traceNorm_apply_le_diamond/) from `StandardFacts.lean`
+- [`traceNormOp_sub_density_le_two`](../Theorem/Lemma1/traceNormOp_sub_density_le_two/) from `Theorem/Lemma1.lean`
 
 ### Later declarations that use this one
-- [`theorem_eq8`](../EndMatter/Eq8/theorem_eq8.md) in `EndMatter/Eq8.lean`
+- [`theorem_eq8`](../EndMatter/Eq8/theorem_eq8/) in `EndMatter/Eq8.lean`
 
 ## Backlinks
 
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](lemma_transpose_diamond.md)
-- [Next declaration in this file](trace_Ud_eq_zero.md)
+- [Back to `INDEX.md`](../INDEX/)
+- [Back to the `StandardFacts.lean` section in the index](../INDEX/#diamond-standardfacts-lean)
+- [Previous declaration in this file](lemma_transpose_diamond/)
+- [Next declaration in this file](trace_Ud_eq_zero/)

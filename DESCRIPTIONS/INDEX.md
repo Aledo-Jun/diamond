@@ -51,30 +51,30 @@ flowchart LR
 
 ## Module Overviews
 
-- [`Setups/OVERVIEW.md`](Setups/OVERVIEW.md)
+- [`Setups/OVERVIEW.md`](Setups/OVERVIEW/)
   Core objects:
   operators, channels, density states, transpose, partial transpose, ancilla extension,
   trace norm, Hilbert--Schmidt norm, and the paper's \(k=d\) diamond norm convention.
 
-- [`StandardFacts/OVERVIEW.md`](StandardFacts/OVERVIEW.md)
+- [`StandardFacts/OVERVIEW.md`](StandardFacts/OVERVIEW/)
   Background results:
   Kraus forms, pointwise-to-diamond reductions, Hermiticity and trace facts, contractivity,
   witness attainment, and the ancilla compression/expansion tools used later.
 
-- [`Theorem/OVERVIEW.md`](Theorem/OVERVIEW.md)
+- [`Theorem/OVERVIEW.md`](Theorem/OVERVIEW/)
   Main proof flow:
   Lemma 1, Lemma 2, Lemma 3, Theorem 1, and Remark 1.
 
-- [`PositiveGap/OVERVIEW.md`](PositiveGap/OVERVIEW.md)
+- [`PositiveGap/OVERVIEW.md`](PositiveGap/OVERVIEW/)
   Why the constant \(1/\sqrt{2}\) is not attained in finite dimension for nonzero channel
   differences.
 
-- [`HolevoWerner/OVERVIEW.md`](HolevoWerner/OVERVIEW.md)
+- [`HolevoWerner/OVERVIEW.md`](HolevoWerner/OVERVIEW/)
   The coding-theoretic layer:
   the original Holevo--Werner converse, the replacement argument, the improved converse,
   and the recursive tensor-power channel.
 
-- [`EndMatter/OVERVIEW.md`](EndMatter/OVERVIEW.md)
+- [`EndMatter/OVERVIEW.md`](EndMatter/OVERVIEW/)
   The end-of-paper consequences:
   Eq. (7), Eq. (8), the lower bound on the universal constant, and Corollary 2.
 
@@ -83,35 +83,35 @@ flowchart LR
 These are the best pages to read if you want the mathematical core without diving into every
 supporting declaration.
 
-- [`Theorem/Theorem1/theorem1.md`](Theorem/Theorem1/theorem1.md)
+- [`Theorem/Theorem1/theorem1.md`](Theorem/Theorem1/theorem1/)
   The main strict submultiplicativity theorem.
 
-- [`Theorem/Remark1/remark1.md`](Theorem/Remark1/remark1.md)
+- [`Theorem/Remark1/remark1.md`](Theorem/Remark1/remark1/)
   The extension from channel differences to arbitrary Hermiticity-preserving,
   trace-annihilating maps.
 
-- [`PositiveGap/NotTight/theorem_not_tight.md`](PositiveGap/NotTight/theorem_not_tight.md)
+- [`PositiveGap/NotTight/theorem_not_tight.md`](PositiveGap/NotTight/theorem_not_tight/)
   The finite-dimensional strictness statement.
 
-- [`EndMatter/Eq7/theorem_eq7.md`](EndMatter/Eq7/theorem_eq7.md)
+- [`EndMatter/Eq7/theorem_eq7.md`](EndMatter/Eq7/theorem_eq7/)
   The explicit lower bound
   $$
   2 \cot\!\left(\frac{\pi}{2d}\right) \le \|\Lambda_d\|_\diamond.
   $$
 
-- [`EndMatter/Eq8/theorem_eq8.md`](EndMatter/Eq8/theorem_eq8.md)
+- [`EndMatter/Eq8/theorem_eq8.md`](EndMatter/Eq8/theorem_eq8/)
   The exact unitary-channel distance formula
   $$
   \|\mathrm{id} - \mathrm{Ad}_{U_d}\|_\diamond = 2.
   $$
 
-- [`EndMatter/Eq8/alpha_lower_bound.md`](EndMatter/Eq8/alpha_lower_bound.md)
+- [`EndMatter/Eq8/alpha_lower_bound.md`](EndMatter/Eq8/alpha_lower_bound/)
   The lower bound on any dimension-independent constant:
   $$
   \frac{2}{\pi} \le \frac{1}{\sqrt{2}}.
   $$
 
-- [`HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md`](HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md)
+- [`HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md`](HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow/)
   The recursive middle-channel estimate
   $$
   \left\|\Theta \circ T^{\otimes m}\right\|_\diamond
@@ -120,10 +120,10 @@ supporting declaration.
   $$
   for the concrete recursive tensor-power channel used in the code.
 
-- [`HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md`](HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md)
+- [`HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md`](HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower/)
   The improved Holevo--Werner converse in the form actually used by the final corollary.
 
-- [`EndMatter/Corollary2/paper_corollary2.md`](EndMatter/Corollary2/paper_corollary2.md)
+- [`EndMatter/Corollary2/paper_corollary2.md`](EndMatter/Corollary2/paper_corollary2/)
   The canonical paper-facing Corollary 2 theorem in the repository.
 
 ## Corollary 2 Proof Chain

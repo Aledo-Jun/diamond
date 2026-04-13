@@ -57,7 +57,7 @@ The repository keeps both forms because they serve different purposes:
 
 If you care about the final paper statement, read:
 
-- [`paper_corollary2.md`](paper_corollary2.md)
+- [`paper_corollary2.md`](paper_corollary2/)
 
 If you care about the quantitative estimate that actually drives the proof, this page is the
 right stopping point.

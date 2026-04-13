@@ -81,6 +81,6 @@ If you want the final coding statement and not the proof scaffolding, this is th
 
 If you want the proof behind it, the next pages to open are:
 
-1. [`../../HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md`](../../HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md)
-2. [`../../HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md`](../../HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md)
-3. [`../../Theorem/Theorem1/theorem1.md`](../../Theorem/Theorem1/theorem1.md)
+1. [`../../HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower.md`](../../HolevoWerner/Theorem/paper_holevo_werner_improved_converse_of_recursive_tensorPower/)
+2. [`../../HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow.md`](../../HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow/)
+3. [`../../Theorem/Theorem1/theorem1.md`](../../Theorem/Theorem1/theorem1/)

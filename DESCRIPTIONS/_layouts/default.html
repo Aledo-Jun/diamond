@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
     <meta name="description" content="{{ site.description }}">
+    <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
     <script>
       window.MathJax = {
@@ -22,42 +23,50 @@
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <a class="brand" href="{{ '/' | relative_url }}">Diamond Formalization</a>
-        <p class="tagline">Math-first explanations of the Lean development</p>
+        <div class="sidebar-header">
+          <a class="brand" href="{{ '/' | relative_url }}">Diamond Formalization</a>
+          <p class="tagline">Math-first explanations of the Lean development</p>
+        </div>
 
         <nav>
           <h2>Start Here</h2>
           <ul>
-            <li><a href="{{ '/index' | relative_url }}">Home</a></li>
-            <li><a href="{{ '/INDEX' | relative_url }}">Full Index</a></li>
+            <li><a href="{{ '/' | relative_url }}">Home</a></li>
+            <li><a href="{{ '/INDEX/' | relative_url }}">Full Index</a></li>
           </ul>
 
           <h2>Module Guides</h2>
           <ul>
-            <li><a href="{{ '/Setups/OVERVIEW' | relative_url }}">Setups</a></li>
-            <li><a href="{{ '/StandardFacts/OVERVIEW' | relative_url }}">StandardFacts</a></li>
-            <li><a href="{{ '/Theorem/OVERVIEW' | relative_url }}">Theorem</a></li>
-            <li><a href="{{ '/PositiveGap/OVERVIEW' | relative_url }}">PositiveGap</a></li>
-            <li><a href="{{ '/HolevoWerner/OVERVIEW' | relative_url }}">Holevo-Werner</a></li>
-            <li><a href="{{ '/EndMatter/OVERVIEW' | relative_url }}">EndMatter</a></li>
+            <li><a href="{{ '/Setups/OVERVIEW/' | relative_url }}">Setups</a></li>
+            <li><a href="{{ '/StandardFacts/OVERVIEW/' | relative_url }}">StandardFacts</a></li>
+            <li><a href="{{ '/Theorem/OVERVIEW/' | relative_url }}">Theorem</a></li>
+            <li><a href="{{ '/PositiveGap/OVERVIEW/' | relative_url }}">PositiveGap</a></li>
+            <li><a href="{{ '/HolevoWerner/OVERVIEW/' | relative_url }}">Holevo-Werner</a></li>
+            <li><a href="{{ '/EndMatter/OVERVIEW/' | relative_url }}">EndMatter</a></li>
           </ul>
 
           <h2>Flagship Results</h2>
           <ul>
-            <li><a href="{{ '/Theorem/Theorem1/theorem1' | relative_url }}">Theorem 1</a></li>
-            <li><a href="{{ '/Theorem/Remark1/remark1' | relative_url }}">Remark 1</a></li>
-            <li><a href="{{ '/PositiveGap/NotTight/theorem_not_tight' | relative_url }}">Strictness</a></li>
-            <li><a href="{{ '/EndMatter/Eq7/theorem_eq7' | relative_url }}">Eq. (7)</a></li>
-            <li><a href="{{ '/EndMatter/Eq8/theorem_eq8' | relative_url }}">Eq. (8)</a></li>
-            <li><a href="{{ '/EndMatter/Eq8/alpha_lower_bound' | relative_url }}">Lower Bound</a></li>
-            <li><a href="{{ '/HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow' | relative_url }}">Tensor Power Bound</a></li>
-            <li><a href="{{ '/EndMatter/Corollary2/paper_corollary2' | relative_url }}">Paper Corollary 2</a></li>
+            <li><a href="{{ '/Theorem/Theorem1/theorem1/' | relative_url }}">Theorem 1</a></li>
+            <li><a href="{{ '/Theorem/Remark1/remark1/' | relative_url }}">Remark 1</a></li>
+            <li><a href="{{ '/PositiveGap/NotTight/theorem_not_tight/' | relative_url }}">Strictness</a></li>
+            <li><a href="{{ '/EndMatter/Eq7/theorem_eq7/' | relative_url }}">Eq. (7)</a></li>
+            <li><a href="{{ '/EndMatter/Eq8/theorem_eq8/' | relative_url }}">Eq. (8)</a></li>
+            <li><a href="{{ '/EndMatter/Eq8/alpha_lower_bound/' | relative_url }}">Lower Bound</a></li>
+            <li><a href="{{ '/HolevoWerner/Theorem/diamondOp_transpose_tensorPowerChannel_le_pow/' | relative_url }}">Tensor Power Bound</a></li>
+            <li><a href="{{ '/EndMatter/Corollary2/paper_corollary2/' | relative_url }}">Paper Corollary 2</a></li>
           </ul>
         </nav>
+
+        <div class="sidebar-footer">
+          <p>Formal proof notes for the Lean development of the transposition diamond-norm paper.</p>
+        </div>
       </aside>
 
       <main class="content">
-        {{ content }}
+        <article class="content-card">
+          {{ content }}
+        </article>
       </main>
     </div>
 
@@ -66,7 +75,7 @@
       mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
 
       const blocks = Array.from(document.querySelectorAll("pre code.language-mermaid"));
-      blocks.forEach((code, idx) => {
+      blocks.forEach((code) => {
         const host = document.createElement("div");
         host.className = "mermaid";
         host.textContent = code.textContent;

@@ -54,20 +54,20 @@ rank-one density state is built.
 ## Dependencies and downstream use
 
 ### Earlier declarations this depends on
-- [`Channel`](../Setups/Channel.md) from `Setups.lean`
-- [`DensityState`](../Setups/DensityState.md) from `Setups.lean`
-- [`traceNormOp`](../Setups/traceNormOp.md) from `Setups.lean`
-- [`tensorWithIdentity`](../Setups/tensorWithIdentity.md) from `Setups.lean`
-- [`diamondNormAt`](../Setups/diamondNormAt.md) from `Setups.lean`
-- [`diamondOp`](../Setups/diamondOp.md) from `Setups.lean`
+- [`Channel`](../Setups/Channel/) from `Setups.lean`
+- [`DensityState`](../Setups/DensityState/) from `Setups.lean`
+- [`traceNormOp`](../Setups/traceNormOp/) from `Setups.lean`
+- [`tensorWithIdentity`](../Setups/tensorWithIdentity/) from `Setups.lean`
+- [`diamondNormAt`](../Setups/diamondNormAt/) from `Setups.lean`
+- [`diamondOp`](../Setups/diamondOp/) from `Setups.lean`
 
 ### Later declarations that use this one
-- [`theorem1`](../Theorem/Theorem1/theorem1.md) in `Theorem/Theorem1.lean`
-- [`remark1`](../Theorem/Remark1/remark1.md) in `Theorem/Remark1.lean`
+- [`theorem1`](../Theorem/Theorem1/theorem1/) in `Theorem/Theorem1.lean`
+- [`remark1`](../Theorem/Remark1/remark1/) in `Theorem/Remark1.lean`
 
 ## Backlinks
 
-- [Back to `INDEX.md`](../INDEX.md)
-- [Back to the `StandardFacts.lean` section in the index](../INDEX.md#diamond-standardfacts-lean)
-- [Previous declaration in this file](diamond_le_of_pointwise.md)
-- [Next declaration in this file](traceNorm_apply_le_diamond.md)
+- [Back to `INDEX.md`](../INDEX/)
+- [Back to the `StandardFacts.lean` section in the index](../INDEX/#diamond-standardfacts-lean)
+- [Previous declaration in this file](diamond_le_of_pointwise/)
+- [Next declaration in this file](traceNorm_apply_le_diamond/)

@@ -41,7 +41,7 @@ repository, because it treats the \(m\)-use middle channel abstractly.
 
 The canonical page to read now is:
 
-- [`paper_corollary2.md`](paper_corollary2.md)
+- [`paper_corollary2.md`](paper_corollary2/)
 
 That newer theorem specializes the argument to the concrete recursive tensor-power object
 `tensorPowerChannel T m` and uses the middle-channel `diamondOp` estimate proved internally in
