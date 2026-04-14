@@ -77,9 +77,9 @@ In Lean this is the object `tensorPowerChannel T m` on the recursive block space
 The key new estimate is
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes m}\bigr)
+\left\|\Theta \circ T^{\otimes m}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m,
+\left\|\Theta \circ T\right\|_\diamond^m,
 $$
 
 proved internally for the concrete recursive channel rather than assumed as an external input.

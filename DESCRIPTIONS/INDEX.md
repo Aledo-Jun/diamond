@@ -146,9 +146,9 @@ On the coding side, the last formerly external input is now internalized through
 tensor-power bound
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes m}\bigr)
+\left\|\Theta \circ T^{\otimes m}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m,
+\left\|\Theta \circ T\right\|_\diamond^m,
 $$
 
 formalized in the repository for the concrete recursive object

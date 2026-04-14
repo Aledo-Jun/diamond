@@ -61,9 +61,9 @@ Holevo--Werner converse and the replacement argument are formalized explicitly.
 The formerly missing middle-channel estimate is now internal:
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes m}\bigr)
+\left\|\Theta \circ T^{\otimes m}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m.
+\left\|\Theta \circ T\right\|_\diamond^m.
 $$
 
 This is the theorem

@@ -14,9 +14,9 @@ layout: default
 For the concrete recursive tensor-power channel `tensorPowerChannel T m`,
 
 $$
-\diamondOp\!\bigl((\Theta \circ T^{\otimes m})_{\mathrm{rec}}\bigr)
+\left\|(\Theta \circ T^{\otimes m})_{\mathrm{rec}}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m.
+\left\|\Theta \circ T\right\|_\diamond^m.
 $$
 
 Here the subscript “rec” emphasizes that the repository formalizes \(T^{\otimes m}\) as a
@@ -29,9 +29,9 @@ This theorem closes the last formerly external hypothesis in the coding argument
 Earlier versions of the project reduced Corollary 2 to a bound of the form
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes m}\bigr)
+\left\|\Theta \circ T^{\otimes m}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m,
+\left\|\Theta \circ T\right\|_\diamond^m,
 $$
 
 but still left that estimate as an assumption. This theorem proves it internally for the
@@ -76,7 +76,7 @@ definition of `diamondOp`. The proof therefore reindexes the witness space and a
 generic ancilla-stability theorem already developed earlier:
 
 $$
-\diamondNormAt(\Phi) \le \diamondOp(\Phi)
+\|\Phi\|_{\diamond,k} \le \|\Phi\|_\diamond
 $$
 
 for Hermiticity-preserving maps.
@@ -97,10 +97,10 @@ in the specific stabilized setting needed by the recursion.
 Combining the recursive decomposition with the two bounds above yields
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes (n+1)}\bigr)
+\left\|\Theta \circ T^{\otimes (n+1)}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)\,
-\diamondOp\!\bigl(\Theta \circ T^{\otimes n}\bigr),
+\left\|\Theta \circ T\right\|_\diamond\,
+\left\|\Theta \circ T^{\otimes n}\right\|_\diamond,
 $$
 
 and the induction hypothesis gives the claimed power bound.

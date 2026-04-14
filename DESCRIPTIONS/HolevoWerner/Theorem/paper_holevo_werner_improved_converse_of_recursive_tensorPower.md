@@ -49,9 +49,9 @@ The proof no longer assumes an external estimate on the transposed \(m\)-use mid
 That estimate is now supplied internally by
 
 $$
-\diamondOp\!\bigl(\Theta \circ T^{\otimes m}\bigr)
+\left\|\Theta \circ T^{\otimes m}\right\|_\diamond
 \le
-\diamondOp\!\bigl(\Theta \circ T\bigr)^m.
+\left\|\Theta \circ T\right\|_\diamond^m.
 $$
 
 ## Proof Chain
