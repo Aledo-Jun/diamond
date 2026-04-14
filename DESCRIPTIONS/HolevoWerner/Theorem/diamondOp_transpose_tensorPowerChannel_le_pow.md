@@ -19,7 +19,7 @@ $$
 \left\|\Theta \circ T\right\|_\diamond^m.
 $$
 
-Here the subscript “rec” emphasizes that the repository formalizes \(T^{\otimes m}\) as a
+Here the subscript “rec” emphasizes that the repository formalizes $T^{\otimes m}$ as a
 specific recursive channel on the block space `TensorPowerType phys m`.
 
 ## Why This Theorem Matters
@@ -39,7 +39,7 @@ repository's concrete recursive tensor-power object.
 
 ## Proof Structure
 
-The proof is by induction on \(m\).
+The proof is by induction on $m$.
 
 ### 1. Base cases
 
@@ -71,7 +71,7 @@ operators.
 
 ### 3. Bound the “old block” factor
 
-The term involving \(T^{\otimes n}\) acts on a larger ancilla space than the one used in the
+The term involving $T^{\otimes n}$ acts on a larger ancilla space than the one used in the
 definition of `diamondOp`. The proof therefore reindexes the witness space and applies the
 generic ancilla-stability theorem already developed earlier:
 

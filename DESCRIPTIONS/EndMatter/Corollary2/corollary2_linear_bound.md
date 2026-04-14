@@ -20,7 +20,7 @@ $$
 \|\Theta \circ T\|_\diamond^m,
 $$
 
-where \(d\) is the message dimension.
+where $d$ is the message dimension.
 
 ## Why The Linear Form Matters
 

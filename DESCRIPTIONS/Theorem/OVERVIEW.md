@@ -33,17 +33,17 @@ $$
 \|X\|_2 \le \frac{1}{\sqrt{2}} \|X\|_1.
 $$
 
-This is where the factor \(1/\sqrt{2}\) enters.
+This is where the factor $1/\sqrt{2}$ enters.
 
 ### Lemma 2
 
-For matrices on an \(N\)-dimensional space,
+For matrices on an $N$-dimensional space,
 
 $$
 \|Y\|_1 \le \sqrt{N}\,\|Y\|_2.
 $$
 
-This is the ordinary comparison between Schatten \(1\)- and \(2\)-norms.
+This is the ordinary comparison between Schatten $1$- and $2$-norms.
 
 ### Lemma 3
 
@@ -55,7 +55,7 @@ $$
 
 ### Theorem 1
 
-For a quantum channel \(T\),
+For a quantum channel $T$,
 
 $$
 \|\Theta \circ (\mathrm{id}-T)\|_\diamond
@@ -67,11 +67,11 @@ $$
 
 The proof rewrites a stabilized witness through partial transpose, applies Lemma 3, then
 Lemma 2, then Lemma 1, and finally the witness bound coming from the definition of
-\(\|\mathrm{id}-T\|_\diamond\).
+$\|\mathrm{id}-T\|_\diamond$.
 
 ### Remark 1
 
-The same argument works for any Hermiticity-preserving, trace-annihilating map \(\Psi\):
+The same argument works for any Hermiticity-preserving, trace-annihilating map $\Psi$:
 
 $$
 \|\Theta \circ \Psi\|_\diamond

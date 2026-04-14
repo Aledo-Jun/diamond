@@ -11,8 +11,8 @@ layout: default
 
 ## Statement
 
-Suppose a coding scheme uses \(m\) copies of a channel \(T\) to transmit a message space of
-dimension \(d\), and define the decoding error by
+Suppose a coding scheme uses $m$ copies of a channel $T$ to transmit a message space of
+dimension $d$, and define the decoding error by
 
 $$
 \varepsilon
@@ -41,7 +41,7 @@ This is the canonical paper-facing Corollary 2 theorem in the repository.
 
 ## How It Relates To The Paper
 
-The paper writes the middle channel as \(T^{\otimes m}\). In the Lean development, that object
+The paper writes the middle channel as $T^{\otimes m}$. In the Lean development, that object
 is formalized concretely as the recursive channel `tensorPowerChannel T m`.
 
 So the theorem is not merely a wrapper around an abstract placeholder. It is already specialized

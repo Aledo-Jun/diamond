@@ -11,7 +11,7 @@ layout: default
 
 ## Statement
 
-For \(d \ge 2\),
+For $d \ge 2$,
 
 $$
 2 \cot\!\left(\frac{\pi}{2d}\right)
@@ -22,7 +22,7 @@ $$
 ## What Theorem Eq. (7) Does
 
 This theorem gives an explicit lower bound on the diamond norm of the paper's special channel
-\(\Lambda_d\). Unlike the abstract upper bounds from the main theorem, this is a concrete witness
+$\Lambda_d$. Unlike the abstract upper bounds from the main theorem, this is a concrete witness
 computation.
 
 ## Proof Structure
@@ -45,16 +45,16 @@ $$
 
 This state is then used as the explicit diamond-norm witness.
 
-### 2. Compute \((\Lambda_d \otimes \mathrm{id})(\Phi_d)\)
+### 2. Compute $(\Lambda_d \otimes \mathrm{id})(\Phi_d)$
 
 The witness matrix is expanded exactly in terms of the swap operator and the phase unitary
-\(U_d\). In the code, this is the sequence of lemmas around:
+$U_d$. In the code, this is the sequence of lemmas around:
 
 - `transpose_phiState_eq_swap`,
 - `transpose_ad_phiState_eq_swap_mul_phase`,
 - `lambda_phiState_eq`.
 
-The outcome is an explicit matrix formula for the image of \(\Phi_d\).
+The outcome is an explicit matrix formula for the image of $\Phi_d$.
 
 ### 3. Reduce the trace norm to a one-dimensional phase sum
 
@@ -87,7 +87,7 @@ $$
 
 ### 5. Turn the witness value into a diamond-norm lower bound
 
-Since \(\Phi_d\) is a valid density-state witness,
+Since $\Phi_d$ is a valid density-state witness,
 
 $$
 \|(\Lambda_d \otimes \mathrm{id})(\Phi_d)\|_1
@@ -106,4 +106,4 @@ $$
 \frac{2}{\pi} \le \alpha
 $$
 
-for any dimension-independent constant \(\alpha\) in the main transposition inequality.
+for any dimension-independent constant $\alpha$ in the main transposition inequality.

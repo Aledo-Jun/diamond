@@ -22,7 +22,7 @@ $$
 \|\mathrm{id}-T\|_\diamond,
 $$
 
-first for quantum channels \(T\), and then for arbitrary Hermiticity-preserving,
+first for quantum channels $T$, and then for arbitrary Hermiticity-preserving,
 trace-annihilating maps.
 
 ## Recommended Reading Order
@@ -54,7 +54,7 @@ flowchart LR
 - [`Setups/OVERVIEW.md`](Setups/OVERVIEW/)
   Core objects:
   operators, channels, density states, transpose, partial transpose, ancilla extension,
-  trace norm, Hilbert--Schmidt norm, and the paper's \(k=d\) diamond norm convention.
+  trace norm, Hilbert--Schmidt norm, and the paper's $k=d$ diamond norm convention.
 
 - [`StandardFacts/OVERVIEW.md`](StandardFacts/OVERVIEW/)
   Background results:
@@ -66,7 +66,7 @@ flowchart LR
   Lemma 1, Lemma 2, Lemma 3, Theorem 1, and Remark 1.
 
 - [`PositiveGap/OVERVIEW.md`](PositiveGap/OVERVIEW/)
-  Why the constant \(1/\sqrt{2}\) is not attained in finite dimension for nonzero channel
+  Why the constant $1/\sqrt{2}$ is not attained in finite dimension for nonzero channel
   differences.
 
 - [`HolevoWerner/OVERVIEW.md`](HolevoWerner/OVERVIEW/)

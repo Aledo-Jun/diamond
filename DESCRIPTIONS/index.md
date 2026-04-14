@@ -19,7 +19,7 @@ $$
 $$
 
 The repository now also formalizes the finite-error coding consequence in a concrete recursive
-form, using an actual Lean definition of the repeated-use channel \(T^{\otimes m}\).
+form, using an actual Lean definition of the repeated-use channel $T^{\otimes m}$.
 
 ## Reading Paths
 
@@ -70,7 +70,7 @@ flowchart LR
 The canonical endmatter entry point is
 [paper_corollary2](EndMatter/Corollary2/paper_corollary2/).
 
-It states that if a coding scheme using \(m\) copies of \(T\) has error
+It states that if a coding scheme using $m$ copies of $T$ has error
 
 $$
 \varepsilon

@@ -23,8 +23,8 @@ $$
 $$
 
 That separation matters because it isolates exactly where the old
-\(\varepsilon < \tfrac12\) threshold came from and how Theorem 1 replaces it by
-\(\varepsilon < \tfrac{1}{\sqrt{2}}\).
+$\varepsilon < \tfrac12$ threshold came from and how Theorem 1 replaces it by
+$\varepsilon < \tfrac{1}{\sqrt{2}}$.
 
 ## Main Layers
 
@@ -58,12 +58,12 @@ then the same coding proof yields a correspondingly improved finite-error conver
 
 ### 4. Improved converse
 
-Applying Remark 1 with \(\alpha = 1/\sqrt{2}\) gives the improved finite-error threshold.
+Applying Remark 1 with $\alpha = 1/\sqrt{2}$ gives the improved finite-error threshold.
 
 ## Tensor-Power Channel
 
 The folder now also contains a concrete recursive formalization of
-\(T^{\otimes m}\):
+$T^{\otimes m}$:
 
 $$
 T^{\otimes 0} = \mathrm{id},

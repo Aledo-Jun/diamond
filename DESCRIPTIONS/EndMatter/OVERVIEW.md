@@ -15,14 +15,14 @@ The `EndMatter/` folder contains the explicit consequences discussed at the end 
 
 ## Eq. (7): Explicit Lower Bound
 
-The file `Eq7.lean` constructs a concrete witness for the map \(\Lambda_d\) and proves
+The file `Eq7.lean` constructs a concrete witness for the map $\Lambda_d$ and proves
 
 $$
 2 \cot\!\left(\frac{\pi}{2d}\right) \le \|\Lambda_d\|_\diamond.
 $$
 
 The proof is explicit: it writes down the maximally entangled state, evaluates the image under
-\(\Lambda_d \otimes \mathrm{id}\), diagonalizes the resulting matrix through the swap operator,
+$\Lambda_d \otimes \mathrm{id}$, diagonalizes the resulting matrix through the swap operator,
 and sums the resulting phases.
 
 ## Eq. (8): Exact Unitary Distance
@@ -43,7 +43,7 @@ $$
 \frac{2}{\pi} \le \frac{1}{\sqrt{2}}.
 $$
 
-More conceptually, it shows that no dimension-independent constant below \(2/\pi\) can hold
+More conceptually, it shows that no dimension-independent constant below $2/\pi$ can hold
 uniformly in the main theorem.
 
 ## Corollary 2
@@ -55,7 +55,7 @@ tensor-power channel. The canonical theorem is
 
 Its mathematical content is:
 
-if a coding scheme using \(m\) uses of \(T\) transmits a message space of dimension \(d\) with
+if a coding scheme using $m$ uses of $T$ transmits a message space of dimension $d$ with
 error
 
 $$

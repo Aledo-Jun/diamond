@@ -11,7 +11,7 @@ layout: default
 
 ## Statement
 
-For every Hermiticity-preserving, trace-annihilating map \(\Psi\),
+For every Hermiticity-preserving, trace-annihilating map $\Psi$,
 
 $$
 \|\Theta \circ \Psi\|_\diamond
@@ -23,11 +23,11 @@ $$
 
 ## Mathematical Role
 
-`theorem1` handles the special case \(\Psi = \mathrm{id}-T\) for a quantum channel \(T\).
+`theorem1` handles the special case $\Psi = \mathrm{id}-T$ for a quantum channel $T$.
 `remark1` packages the same argument in the exact form needed by the later coding application.
 
 The point is that the proof of Theorem 1 never used anything special about
-\(\mathrm{id}-T\) beyond two structural facts:
+$\mathrm{id}-T$ beyond two structural facts:
 
 $$
 \Psi(X^\dagger) = \Psi(X)^\dagger,
@@ -39,8 +39,8 @@ Those are precisely the hypotheses of `remark1`.
 
 ## Proof Structure
 
-The proof follows the same pattern as Theorem 1, but with the abstract map \(\Psi\) in place of
-\(\mathrm{id}-T\).
+The proof follows the same pattern as Theorem 1, but with the abstract map $\Psi$ in place of
+$\mathrm{id}-T$.
 
 ### 1. Stabilized witness
 
@@ -68,7 +68,7 @@ $$
 
 ### 3. Use the structural hypotheses
 
-Because \(\Psi\) is Hermiticity-preserving and trace-annihilating, the matrix \(M_\rho\) is
+Because $\Psi$ is Hermiticity-preserving and trace-annihilating, the matrix $M_\rho$ is
 Hermitian and traceless.
 
 This is the key input that makes Lemma 1 applicable.
@@ -85,7 +85,7 @@ $$
 \sqrt{d^2}\,\frac{1}{\sqrt{2}}\|M_\rho\|_1.
 $$
 
-### 5. Convert back to \(\|\Psi\|_\diamond\)
+### 5. Convert back to $\|\Psi\|_\diamond$
 
 The witness norm satisfies
 
@@ -93,7 +93,7 @@ $$
 \|M_\rho\|_1 \le \|\Psi\|_\diamond,
 $$
 
-and \(\sqrt{d^2} = \|\Theta\|_\diamond\), so the stated inequality follows.
+and $\sqrt{d^2} = \|\Theta\|_\diamond$, so the stated inequality follows.
 
 ## Why This Remark Matters
 

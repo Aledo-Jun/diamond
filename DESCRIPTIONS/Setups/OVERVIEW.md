@@ -23,14 +23,14 @@ represented in Lean by complex square matrices indexed by a finite type `d`.
 The basic objects are:
 
 - `Operator d`:
-  a complex \(d \times d\) matrix.
+  a complex $d \times d$ matrix.
 - `Channel d`:
   a complex-linear map
   $$
   L(\mathbb{C}^d) \to L(\mathbb{C}^d).
   $$
 - `DensityState d`:
-  a positive semidefinite matrix of trace \(1\).
+  a positive semidefinite matrix of trace $1$.
 
 ## Norms
 
@@ -58,7 +58,7 @@ $$
 \Phi \mapsto \Phi \otimes \mathrm{id}_k.
 $$
 
-In Lean this is the map `tensorWithIdentity d k Φ`. It applies \(\Phi\) to the left tensor
+In Lean this is the map `tensorWithIdentity d k Φ`. It applies $\Phi$ to the left tensor
 factor and leaves the right factor untouched.
 
 The left partial transpose is also defined:
@@ -97,9 +97,9 @@ is also present as `diamondNormAt`.
 
 The file also defines:
 
-- `transposeMap`: the ordinary matrix transpose \(\Theta\),
-- `idMinus Φ`: the difference \(\mathrm{id} - \Phi\),
-- `adMap U`: conjugation by a unitary \(U\),
+- `transposeMap`: the ordinary matrix transpose $\Theta$,
+- `idMinus Φ`: the difference $\mathrm{id} - \Phi$,
+- `adMap U`: conjugation by a unitary $U$,
 - `Ud` and `Lambda`: the explicit end-matter maps used in Eq. (7) and Eq. (8).
 
 ## Why This File Matters

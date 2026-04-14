@@ -12,8 +12,8 @@ layout: default
 
 ## Statement
 
-Let a coding scheme use \(m\) copies of a channel \(T\), with encoder \(\mathcal E\) and decoder
-\(\mathcal D\), and define the decoding error by
+Let a coding scheme use $m$ copies of a channel $T$, with encoder $\mathcal E$ and decoder
+$\mathcal D$, and define the decoding error by
 
 $$
 \varepsilon
@@ -38,14 +38,14 @@ $$
 \log_2\!\left(\frac{1}{1-\sqrt{2}\varepsilon}\right),
 $$
 
-where \(d\) is the message dimension.
+where $d$ is the message dimension.
 
 ## What Is New Here
 
 This theorem is the coding-level statement after the recursive tensor-power channel has been
 fully internalized.
 
-The proof no longer assumes an external estimate on the transposed \(m\)-use middle channel.
+The proof no longer assumes an external estimate on the transposed $m$-use middle channel.
 That estimate is now supplied internally by
 
 $$
@@ -72,7 +72,7 @@ $$
 
 More concretely:
 
-1. `Remark 1` gives the improved error-term estimate with the constant \(1/\sqrt{2}\).
+1. `Remark 1` gives the improved error-term estimate with the constant $1/\sqrt{2}$.
 2. The replacement argument inserts that estimate into the original Holevo--Werner proof.
 3. The recursive tensor-power theorem proves the needed middle-channel bound internally.
 4. The result is then specialized to the concrete recursive channel `tensorPowerChannel T m`.

@@ -43,7 +43,7 @@ $$
 \quad\text{for Hermitian }X
 $$
 
-when \(T\) is a quantum channel, together with the corresponding density-state and diamond-norm
+when $T$ is a quantum channel, together with the corresponding density-state and diamond-norm
 versions.
 
 ### 4. Transpose decomposition machinery
@@ -57,7 +57,7 @@ $$
 \Gamma \circ (\Phi \otimes \mathrm{id}),
 $$
 
-where \(\Gamma\) is the partial transpose on the larger space. This is the bridge between the
+where $\Gamma$ is the partial transpose on the larger space. This is the bridge between the
 main theorem and concrete witness computations.
 
 ### 5. Witness attainment and spectral decompositions

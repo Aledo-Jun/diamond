@@ -11,7 +11,7 @@ layout: default
 
 ## Statement
 
-For the phase unitary \(U_d\),
+For the phase unitary $U_d$,
 
 $$
 \|\mathrm{id} - \mathrm{Ad}_{U_d}\|_\diamond = 2.
@@ -19,7 +19,7 @@ $$
 
 ## Meaning
 
-The channel \(\mathrm{Ad}_{U_d}\) is unitary conjugation by \(U_d\). This theorem says that its
+The channel $\mathrm{Ad}_{U_d}$ is unitary conjugation by $U_d$. This theorem says that its
 diamond distance from the identity channel is exactly maximal in the scale relevant to the paper.
 
 ## Proof Structure
@@ -44,22 +44,22 @@ $$
 
 The project already proves:
 
-- \(U_d^\dagger U_d = I\),
-- \(\operatorname{tr}(U_d) = 0\).
+- $U_d^\dagger U_d = I$,
+- $\operatorname{tr}(U_d) = 0$.
 
 These are exactly the assumptions needed by the general unitary-channel distance formula proved
 earlier in the repository.
 
 ### 3. Apply the general formula
 
-The final step is an application of the background theorem stating that if \(U\) is unitary and
-\(\operatorname{tr}(U)=0\), then
+The final step is an application of the background theorem stating that if $U$ is unitary and
+$\operatorname{tr}(U)=0$, then
 
 $$
 \|\mathrm{id} - \mathrm{Ad}_U\|_\diamond = 2.
 $$
 
-Substituting \(U = U_d\) gives the result immediately.
+Substituting $U = U_d$ gives the result immediately.
 
 ## Why This Theorem Matters
 

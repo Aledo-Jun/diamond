@@ -18,7 +18,7 @@ $$
 $$
 
 Inside the paper, this is read as a lower bound on any universal constant that could replace
-\(1/\sqrt{2}\) in the main transposition estimate.
+$1/\sqrt{2}$ in the main transposition estimate.
 
 ## Where It Comes From
 
@@ -36,7 +36,7 @@ $$
 \|\mathrm{id}-T\|_\diamond
 $$
 
-with \(\alpha = 1/\sqrt{2}\) in the proved theorem.
+with $\alpha = 1/\sqrt{2}$ in the proved theorem.
 
 ### 2. The explicit lower bound
 
@@ -56,7 +56,7 @@ $$
 \|\mathrm{id} - \mathrm{Ad}_{U_d}\|_\diamond = 2.
 $$
 
-In the relevant example, \(\Lambda_d\) is exactly the transpose composed with that channel
+In the relevant example, $\Lambda_d$ is exactly the transpose composed with that channel
 difference, so these three ingredients combine into
 
 $$
@@ -65,7 +65,7 @@ $$
 \frac{1}{\sqrt{2}} \, d \, 2.
 $$
 
-After dividing by \(d\) and sending \(d \to \infty\), the asymptotic cotangent estimate yields
+After dividing by $d$ and sending $d \to \infty$, the asymptotic cotangent estimate yields
 
 $$
 \frac{2}{\pi} \le \frac{1}{\sqrt{2}}.
@@ -74,5 +74,5 @@ $$
 ## Why This Theorem Matters
 
 This is the project's lower-bound obstruction theorem. It shows that no dimension-independent
-constant below \(2/\pi\) can hold uniformly, even though Theorem 1 proves the upper bound
-\(1/\sqrt{2}\).
+constant below $2/\pi$ can hold uniformly, even though Theorem 1 proves the upper bound
+$1/\sqrt{2}$.

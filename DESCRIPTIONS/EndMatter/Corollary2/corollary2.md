@@ -37,7 +37,7 @@ Holevo--Werner finite-error converse follows.
 ## Why It Is No Longer The Canonical Endpoint
 
 This theorem is still correct, but it is no longer the best reader-facing theorem in the
-repository, because it treats the \(m\)-use middle channel abstractly.
+repository, because it treats the $m$-use middle channel abstractly.
 
 The canonical page to read now is:
 

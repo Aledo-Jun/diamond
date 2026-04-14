@@ -6,13 +6,13 @@ layout: default
 
 ## Purpose
 
-The `PositiveGap/` folder proves that the constant \(1/\sqrt{2}\) from Theorem 1 is not merely
+The `PositiveGap/` folder proves that the constant $1/\sqrt{2}$ from Theorem 1 is not merely
 an upper bound that happens to be attained everywhere. In finite dimension, the inequality is
 strict as soon as the channel difference is nonzero.
 
 ## Main Statement
 
-For a quantum channel \(T\) with \(\mathrm{id}-T \neq 0\),
+For a quantum channel $T$ with $\mathrm{id}-T \neq 0$,
 
 $$
 \|\Theta \circ (\mathrm{id}-T)\|_\diamond
